@@ -1,0 +1,73 @@
+.root {
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-font-size: 13px;
+    -fx-background-color: #f5f7fb;
+}
+
+.sidebar {
+    -fx-background-color: #172033;
+    -fx-padding: 16;
+    -fx-spacing: 10;
+}
+
+.sidebar-title {
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+.sidebar-subtitle {
+    -fx-text-fill: #b8c4d8;
+}
+
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #e7edf8;
+    -fx-alignment: center-left;
+    -fx-padding: 10 12;
+}
+
+.nav-button:hover {
+    -fx-background-color: #253149;
+}
+
+.page {
+    -fx-padding: 18;
+    -fx-spacing: 14;
+}
+
+.page-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #172033;
+}
+
+.toolbar {
+    -fx-padding: 10;
+    -fx-background-color: white;
+    -fx-border-color: #dde4ef;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-spacing: 10;
+}
+
+.section {
+    -fx-padding: 14;
+    -fx-background-color: white;
+    -fx-border-color: #dde4ef;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-spacing: 10;
+}
+
+.primary-button {
+    -fx-background-color: #1f6feb;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.danger-button {
+    -fx-background-color: #d1242f;
+    -fx-text-fill: white;
+}
+

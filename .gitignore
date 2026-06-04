@@ -1,0 +1,16 @@
+# Compiled output
+out/
+
+# Build artifacts
+sources.txt
+
+# Backup files
+*.new
+
+# Claude Code internal
+CLAUDE.md
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
