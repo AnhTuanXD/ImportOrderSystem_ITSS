@@ -1,59 +1,59 @@
 package com.itss.importorder;
 
-import com.itss.importorder.model.StockRecord;
+import com.itss.importorder.controller.DiaDiemNhapController;
+import com.itss.importorder.controller.KiemHangController;
+import com.itss.importorder.controller.PhuongAnController;
+import com.itss.importorder.controller.XacThucController;
+import com.itss.importorder.controller.YeuCauNhapHangController;
+import com.itss.importorder.entity.TonKho;
 import com.itss.importorder.repository.DataStore;
 import com.itss.importorder.repository.SampleDataFactory;
-import com.itss.importorder.service.AuthService;
-import com.itss.importorder.service.ImportRequestService;
-import com.itss.importorder.service.PlanningService;
-import com.itss.importorder.service.SiteService;
-import com.itss.importorder.service.WarehouseService;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class AppContext {
     private final DataStore store = SampleDataFactory.create();
-    private final AuthService authService = new AuthService(store);
-    private final ImportRequestService importRequestService = new ImportRequestService(store);
-    private final SiteService siteService = new SiteService(store);
-    private final PlanningService planningService = new PlanningService(store);
-    private final WarehouseService warehouseService = new WarehouseService(store);
+    private final XacThucController xacThucController       = new XacThucController(store);
+    private final YeuCauNhapHangController ycnhController   = new YeuCauNhapHangController(store);
+    private final DiaDiemNhapController diaDiemController   = new DiaDiemNhapController(store);
+    private final PhuongAnController phuongAnController      = new PhuongAnController(store);
+    private final KiemHangController kiemHangController      = new KiemHangController(store);
 
-    public AuthService getAuthService() {
-        return authService;
+    public XacThucController getXacThucController() {
+        return xacThucController;
     }
 
-    public ImportRequestService getImportRequestService() {
-        return importRequestService;
+    public YeuCauNhapHangController getYeuCauNhapHangController() {
+        return ycnhController;
     }
 
-    public SiteService getSiteService() {
-        return siteService;
+    public DiaDiemNhapController getDiaDiemNhapController() {
+        return diaDiemController;
     }
 
-    public PlanningService getPlanningService() {
-        return planningService;
+    public PhuongAnController getPhuongAnController() {
+        return phuongAnController;
     }
 
-    public WarehouseService getWarehouseService() {
-        return warehouseService;
+    public KiemHangController getKiemHangController() {
+        return kiemHangController;
     }
 
-    public List<StockRecord> getStockRecords(String siteCode) {
+    public List<TonKho> getTonKhos(String siteCode) {
         try {
-            return store.findStockRecordsBySiteCode(siteCode);
+            return store.findTonKhosBySiteCode(siteCode);
         } catch (SQLException e) {
-            System.err.println("Lỗi lấy dữ liệu stock: " + e.getMessage());
-            return new java.util.ArrayList<>();
+            System.err.println("Lỗi lấy dữ liệu tồn kho: " + e.getMessage());
+            return new ArrayList<>();
         }
     }
 
-    public void saveStockRecord(StockRecord record) throws SQLException {
-        store.saveStockRecord(record);
+    public void saveTonKho(TonKho tonKho) throws SQLException {
+        store.saveTonKho(tonKho);
     }
 
-    public void deleteStockRecord(String siteCode, String merchandiseCode) throws SQLException {
-        store.deleteStockRecord(siteCode, merchandiseCode);
+    public void deleteTonKho(String siteCode, String merchandiseCode) throws SQLException {
+        store.deleteTonKho(siteCode, merchandiseCode);
     }
 }
-

@@ -1,159 +1,162 @@
 package com.itss.importorder.repository;
 
-import com.itss.importorder.database.*;
-import com.itss.importorder.model.ImportPlan;
-import com.itss.importorder.model.ImportRequest;
-import com.itss.importorder.model.ImportSite;
-import com.itss.importorder.model.StockRecord;
-import com.itss.importorder.model.User;
-import com.itss.importorder.model.WarehouseReport;
+import com.itss.importorder.entity.BaoCaoKho;
+import com.itss.importorder.entity.DiaDiemNhap;
+import com.itss.importorder.entity.NguoiDung;
+import com.itss.importorder.entity.PhuongAnNhapHang;
+import com.itss.importorder.entity.TonKho;
+import com.itss.importorder.entity.YeuCauNhapHang;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DataStore {
-    private final UserRepository userRepository = new UserRepository();
-    private final ImportRequestRepository importRequestRepository = new ImportRequestRepository();
-    private final ImportSiteRepository importSiteRepository = new ImportSiteRepository();
-    private final StockRecordRepository stockRecordRepository = new StockRecordRepository();
-    private final ImportPlanRepository importPlanRepository = new ImportPlanRepository();
-    private final WarehouseReportRepository warehouseReportRepository = new WarehouseReportRepository();
+    private final NguoiDungRepository nguoiDungRepository = new NguoiDungRepository();
+    private final YeuCauNhapHangRepository ycnhRepository = new YeuCauNhapHangRepository();
+    private final DiaDiemNhapRepository diaDiemRepository = new DiaDiemNhapRepository();
+    private final TonKhoRepository tonKhoRepository = new TonKhoRepository();
+    private final PhuongAnRepository phuongAnRepository = new PhuongAnRepository();
+    private final BaoCaoKhoRepository baoCaoKhoRepository = new BaoCaoKhoRepository();
 
-    public List<User> getUsers() {
+    // ── Getters ──────────────────────────────────────────────────────────────
+
+    public List<NguoiDung> getNguoiDungs() {
         try {
-            return userRepository.findAll();
+            return nguoiDungRepository.findAll();
         } catch (SQLException e) {
-            System.err.println("Lỗi lấy dữ liệu users: " + e.getMessage());
+            System.err.println("Lỗi lấy dữ liệu người dùng: " + e.getMessage());
             return new ArrayList<>();
         }
     }
 
-    public List<ImportRequest> getImportRequests() {
+    public List<YeuCauNhapHang> getYeuCauNhapHangs() {
         try {
-            return importRequestRepository.findAll();
+            return ycnhRepository.findAll();
         } catch (SQLException e) {
-            System.err.println("Lỗi lấy dữ liệu import requests: " + e.getMessage());
+            System.err.println("Lỗi lấy dữ liệu yêu cầu nhập hàng: " + e.getMessage());
             return new ArrayList<>();
         }
     }
 
-    public List<ImportSite> getImportSites() {
+    public List<DiaDiemNhap> getDiaDiemNhaps() {
         try {
-            return importSiteRepository.findAll();
+            return diaDiemRepository.findAll();
         } catch (SQLException e) {
-            System.err.println("Lỗi lấy dữ liệu import sites: " + e.getMessage());
+            System.err.println("Lỗi lấy dữ liệu địa điểm nhập: " + e.getMessage());
             return new ArrayList<>();
         }
     }
 
-    public List<StockRecord> getStockRecords() {
+    public List<TonKho> getTonKhos() {
         try {
-            return stockRecordRepository.findAll();
+            return tonKhoRepository.findAll();
         } catch (SQLException e) {
-            System.err.println("Lỗi lấy dữ liệu stock records: " + e.getMessage());
+            System.err.println("Lỗi lấy dữ liệu tồn kho: " + e.getMessage());
             return new ArrayList<>();
         }
     }
 
-    public List<ImportPlan> getImportPlans() {
+    public List<PhuongAnNhapHang> getPhuongAnNhapHangs() {
         try {
-            return importPlanRepository.findAll();
+            return phuongAnRepository.findAll();
         } catch (SQLException e) {
-            System.err.println("Lỗi lấy dữ liệu import plans: " + e.getMessage());
+            System.err.println("Lỗi lấy dữ liệu phương án nhập hàng: " + e.getMessage());
             return new ArrayList<>();
         }
     }
 
-    public List<WarehouseReport> getWarehouseReports() {
+    public List<BaoCaoKho> getBaoCaoKhos() {
         try {
-            return warehouseReportRepository.findAll();
+            return baoCaoKhoRepository.findAll();
         } catch (SQLException e) {
-            System.err.println("Lỗi lấy dữ liệu warehouse reports: " + e.getMessage());
+            System.err.println("Lỗi lấy dữ liệu báo cáo kho: " + e.getMessage());
             return new ArrayList<>();
         }
     }
 
-    // Các phương thức save
-    public void saveUser(User user) throws SQLException {
-        userRepository.save(user);
+    // ── Save ─────────────────────────────────────────────────────────────────
+
+    public void saveNguoiDung(NguoiDung nguoiDung) throws SQLException {
+        nguoiDungRepository.save(nguoiDung);
     }
 
-    public void saveImportRequest(ImportRequest request) throws SQLException {
-        importRequestRepository.save(request);
+    public void saveYeuCauNhapHang(YeuCauNhapHang ycnh) throws SQLException {
+        ycnhRepository.save(ycnh);
     }
 
-    public void saveImportSite(ImportSite site) throws SQLException {
-        importSiteRepository.save(site);
+    public void saveDiaDiemNhap(DiaDiemNhap diaDiem) throws SQLException {
+        diaDiemRepository.save(diaDiem);
     }
 
-    public void saveStockRecord(StockRecord record) throws SQLException {
-        stockRecordRepository.save(record);
+    public void saveTonKho(TonKho tonKho) throws SQLException {
+        tonKhoRepository.save(tonKho);
     }
 
-    public void saveImportPlan(ImportPlan plan) throws SQLException {
-        importPlanRepository.save(plan);
+    public void savePhuongAnNhapHang(PhuongAnNhapHang phuongAn) throws SQLException {
+        phuongAnRepository.save(phuongAn);
     }
 
-    public void saveWarehouseReport(WarehouseReport report) throws SQLException {
-        warehouseReportRepository.save(report);
+    public void saveBaoCaoKho(BaoCaoKho baoCao) throws SQLException {
+        baoCaoKhoRepository.save(baoCao);
     }
 
-    // Các phương thức delete
-    public void deleteUser(String username) throws SQLException {
-        userRepository.delete(username);
+    // ── Delete ───────────────────────────────────────────────────────────────
+
+    public void deleteNguoiDung(String username) throws SQLException {
+        nguoiDungRepository.delete(username);
     }
 
-    public void deleteImportRequest(String requestCode) throws SQLException {
-        importRequestRepository.delete(requestCode);
+    public void deleteYeuCauNhapHang(String requestCode) throws SQLException {
+        ycnhRepository.delete(requestCode);
     }
 
-    public void deleteImportSite(String siteCode) throws SQLException {
-        importSiteRepository.delete(siteCode);
+    public void deleteDiaDiemNhap(String siteCode) throws SQLException {
+        diaDiemRepository.delete(siteCode);
     }
 
-    public void deleteStockRecord(String siteCode, String merchandiseCode) throws SQLException {
-        stockRecordRepository.delete(siteCode, merchandiseCode);
+    public void deleteTonKho(String siteCode, String merchandiseCode) throws SQLException {
+        tonKhoRepository.delete(siteCode, merchandiseCode);
     }
 
-    public void deleteImportPlan(String planCode) throws SQLException {
-        importPlanRepository.delete(planCode);
+    public void deletePhuongAnNhapHang(String planCode) throws SQLException {
+        phuongAnRepository.delete(planCode);
     }
 
-    public void deleteWarehouseReport(String reportCode) throws SQLException {
-        warehouseReportRepository.delete(reportCode);
+    public void deleteBaoCaoKho(String reportCode) throws SQLException {
+        baoCaoKhoRepository.delete(reportCode);
     }
 
-    // Các phương thức find
-    public User findUserByUsername(String username) throws SQLException {
-        return userRepository.findByUsername(username);
+    // ── Find ─────────────────────────────────────────────────────────────────
+
+    public NguoiDung findNguoiDungByUsername(String username) throws SQLException {
+        return nguoiDungRepository.findByUsername(username);
     }
 
-    public ImportRequest findImportRequestByCode(String requestCode) throws SQLException {
-        return importRequestRepository.findByCode(requestCode);
+    public YeuCauNhapHang findYeuCauNhapHangByCode(String requestCode) throws SQLException {
+        return ycnhRepository.findByCode(requestCode);
     }
 
-    public ImportSite findImportSiteByCode(String siteCode) throws SQLException {
-        return importSiteRepository.findByCode(siteCode);
+    public DiaDiemNhap findDiaDiemNhapByCode(String siteCode) throws SQLException {
+        return diaDiemRepository.findByCode(siteCode);
     }
 
-    public List<StockRecord> findStockRecordsBySiteCode(String siteCode) throws SQLException {
-        return stockRecordRepository.findBySiteCode(siteCode);
+    public List<TonKho> findTonKhosBySiteCode(String siteCode) throws SQLException {
+        return tonKhoRepository.findBySiteCode(siteCode);
     }
 
-    public ImportPlan findImportPlanByCode(String planCode) throws SQLException {
-        return importPlanRepository.findByCode(planCode);
+    public PhuongAnNhapHang findPhuongAnByCode(String planCode) throws SQLException {
+        return phuongAnRepository.findByCode(planCode);
     }
 
-    public List<ImportPlan> findImportPlansByRequestCode(String requestCode) throws SQLException {
-        return importPlanRepository.findByRequestCode(requestCode);
+    public List<PhuongAnNhapHang> findPhuongAnsByRequestCode(String requestCode) throws SQLException {
+        return phuongAnRepository.findByRequestCode(requestCode);
     }
 
-    public WarehouseReport findWarehouseReportByCode(String reportCode) throws SQLException {
-        return warehouseReportRepository.findByCode(reportCode);
+    public BaoCaoKho findBaoCaoKhoByCode(String reportCode) throws SQLException {
+        return baoCaoKhoRepository.findByCode(reportCode);
     }
 
-    public List<WarehouseReport> findWarehouseReportsByRequestCode(String requestCode) throws SQLException {
-        return warehouseReportRepository.findByRequestCode(requestCode);
+    public List<BaoCaoKho> findBaoCaoKhosByRequestCode(String requestCode) throws SQLException {
+        return baoCaoKhoRepository.findByRequestCode(requestCode);
     }
 }
-

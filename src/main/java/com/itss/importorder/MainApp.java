@@ -1,8 +1,8 @@
 package com.itss.importorder;
 
-import com.itss.importorder.model.User;
-import com.itss.importorder.ui.LoginView;
-import com.itss.importorder.ui.ShellView;
+import com.itss.importorder.boundary.CuaSoChinhBoundary;
+import com.itss.importorder.boundary.DangNhapBoundary;
+import com.itss.importorder.entity.NguoiDung;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -20,13 +20,13 @@ public class MainApp extends Application {
     }
 
     private void showLogin() {
-        Scene scene = new Scene(new LoginView(context, this::showShell).build(), 1120, 720);
+        Scene scene = new Scene(new DangNhapBoundary(context, this::showShell).build(), 1120, 720);
         applyStyle(scene);
         stage.setScene(scene);
     }
 
-    private void showShell(User user) {
-        Scene scene = new Scene(new ShellView(context, user, this::showLogin).build(), 1180, 760);
+    private void showShell(NguoiDung nguoiDung) {
+        Scene scene = new Scene(new CuaSoChinhBoundary(context, nguoiDung, this::showLogin).build(), 1180, 760);
         applyStyle(scene);
         stage.setScene(scene);
     }
@@ -39,4 +39,3 @@ public class MainApp extends Application {
         launch(args);
     }
 }
-
