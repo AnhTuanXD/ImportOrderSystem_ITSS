@@ -51,10 +51,7 @@ public class LoginView {
                 .ifPresentOrElse(onLogin, () -> UiUtil.error("Sai tài khoản hoặc mật khẩu.")));
         password.setOnAction(event -> login.fire());
 
-        Label hint = new Label("sales / overseas / site / warehouse - mật khẩu 123456");
-        hint.setWrapText(true);
-
-        box.getChildren().addAll(title, subtitle, form, login, hint);
+        box.getChildren().addAll(title, subtitle, form, login);
         root.setCenter(box);
         BorderPane.setAlignment(box, Pos.CENTER);
         return root;

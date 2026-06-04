@@ -65,6 +65,11 @@ public final class SampleDataFactory {
         store.saveStockRecord(new StockRecord("SSG03", "SSD-2T", 95, "pcs"));
         store.saveStockRecord(new StockRecord("SJP01", "SSD-2T", 30, "pcs"));
         store.saveStockRecord(new StockRecord("SDE04", "MOTOR-A2", 300, "pcs"));
+        // Stock cho user "site" (IMPORT_SITE role)
+        store.saveStockRecord(new StockRecord("site", "CPU-I7",    80,  "pcs"));
+        store.saveStockRecord(new StockRecord("site", "RAM-32",   150,  "pcs"));
+        store.saveStockRecord(new StockRecord("site", "SSD-2T",    30,  "pcs"));
+        store.saveStockRecord(new StockRecord("site", "MONITOR-4K", 45, "pcs"));
     }
 
     private static void seedRequests(DataStore store) throws SQLException {

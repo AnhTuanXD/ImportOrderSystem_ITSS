@@ -43,6 +43,8 @@ public class ShellView {
                 root.setCenter(new RequestsView(context, user).build()));
         Button sites = navButton("Quản lý Site", () ->
                 root.setCenter(new SitesView(context).build()));
+        Button siteStock = navButton("Quản lý mặt hàng", () ->
+                root.setCenter(new SiteStockView(context, user).build()));
         Button planning = navButton("Lập phương án", () ->
                 root.setCenter(new PlanningView(context).build()));
         Button warehouse = navButton("Quản lý kho", () ->
@@ -53,8 +55,11 @@ public class ShellView {
         if (user.getRole() == Role.SALES || user.getRole() == Role.OVERSEAS_ORDER) {
             sidebar.getChildren().add(requests);
         }
-        if (user.getRole() == Role.OVERSEAS_ORDER || user.getRole() == Role.IMPORT_SITE) {
+        if (user.getRole() == Role.OVERSEAS_ORDER) {
             sidebar.getChildren().add(sites);
+        }
+        if (user.getRole() == Role.IMPORT_SITE) {
+            sidebar.getChildren().add(siteStock);
         }
         if (user.getRole() == Role.OVERSEAS_ORDER) {
             sidebar.getChildren().add(planning);

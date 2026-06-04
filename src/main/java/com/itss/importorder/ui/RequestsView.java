@@ -3,6 +3,7 @@ package com.itss.importorder.ui;
 import com.itss.importorder.AppContext;
 import com.itss.importorder.model.ImportRequest;
 import com.itss.importorder.model.MerchandiseRequest;
+import com.itss.importorder.model.RequestStatus;
 import com.itss.importorder.model.User;
 import com.itss.importorder.service.ValidationException;
 import java.time.LocalDate;
@@ -26,6 +27,7 @@ public class RequestsView {
     private final AppContext context;
     private final User user;
     private final TableView<ImportRequest> table = new TableView<>();
+    private final HBox statsBar = new HBox(12);
 
     public RequestsView(AppContext context, User user) {
         this.context = context;
@@ -55,6 +57,7 @@ public class RequestsView {
                 UiUtil.column("Trạng thái", request -> request.getStatus().getDisplayName(), 160),
                 UiUtil.column("Tổng SL", request -> String.valueOf(request.getTotalQuantity()), 90));
         UiUtil.setupTable(table);
+        table.setPlaceholder(new Label("Không tìm thấy yêu cầu nhập hàng nào."));
 
         Button detail = new Button("Xem chi tiết");
         Button edit = new Button("Chỉnh sửa");
@@ -68,13 +71,92 @@ public class RequestsView {
         edit.setOnAction(event -> showRequestDialog(table.getSelectionModel().getSelectedItem()));
         delete.setOnAction(event -> deleteSelected());
 
-        page.getChildren().addAll(title, toolbar, table, actions);
+        page.getChildren().addAll(title, statsBar, toolbar, table, actions);
         refresh(context.getImportRequestService().findAll());
         return page;
     }
 
     private void refresh(List<ImportRequest> requests) {
         table.setItems(FXCollections.observableArrayList(requests));
+        updateStats(requests);
+    }
+
+    private void updateStats(List<ImportRequest> requests) {
+        int total = requests.size();
+        long pending = requests.stream()
+                .filter(r -> r.getStatus() == RequestStatus.DRAFT || r.getStatus() == RequestStatus.SENT)
+                .count();
+        long approved = requests.stream()
+                .filter(r -> r.getStatus() == RequestStatus.ORDERED || r.getStatus() == RequestStatus.RECEIVED)
+                .count();
+        int approvalRate = total == 0 ? 0 : (int) Math.round(approved * 100.0 / total);
+
+        LocalDate now = LocalDate.now();
+        long thisMonthTotal = requests.stream()
+                .filter(r -> r.getCreatedDate().getYear() == now.getYear()
+                        && r.getCreatedDate().getMonthValue() == now.getMonthValue())
+                .count();
+        long lastMonthTotal = requests.stream()
+                .filter(r -> {
+                    LocalDate lm = now.minusMonths(1);
+                    return r.getCreatedDate().getYear() == lm.getYear()
+                            && r.getCreatedDate().getMonthValue() == lm.getMonthValue();
+                }).count();
+        String totalTrend = lastMonthTotal == 0 ? "" :
+                String.format("%+.0f%% tháng này", (thisMonthTotal - lastMonthTotal) * 100.0 / lastMonthTotal);
+
+        long thisMonthApproved = requests.stream()
+                .filter(r -> (r.getStatus() == RequestStatus.ORDERED || r.getStatus() == RequestStatus.RECEIVED)
+                        && r.getCreatedDate().getYear() == now.getYear()
+                        && r.getCreatedDate().getMonthValue() == now.getMonthValue())
+                .count();
+        long lastMonthApproved = requests.stream()
+                .filter(r -> {
+                    LocalDate lm = now.minusMonths(1);
+                    return (r.getStatus() == RequestStatus.ORDERED || r.getStatus() == RequestStatus.RECEIVED)
+                            && r.getCreatedDate().getYear() == lm.getYear()
+                            && r.getCreatedDate().getMonthValue() == lm.getMonthValue();
+                }).count();
+        long lastMonthTotalForRate = requests.stream()
+                .filter(r -> {
+                    LocalDate lm = now.minusMonths(1);
+                    return r.getCreatedDate().getYear() == lm.getYear()
+                            && r.getCreatedDate().getMonthValue() == lm.getMonthValue();
+                }).count();
+        int lastMonthRate = lastMonthTotalForRate == 0 ? 0 :
+                (int) Math.round(lastMonthApproved * 100.0 / lastMonthTotalForRate);
+        String rateTrend = lastMonthTotalForRate == 0 ? "" :
+                String.format("%+d%% so với tháng trước", approvalRate - lastMonthRate);
+
+        statsBar.getChildren().setAll(
+                buildStatCard("Tổng yêu cầu", String.valueOf(total), totalTrend, "#1976D2"),
+                buildStatCard("Chờ xử lý", String.valueOf(pending), "", "#FF9800"),
+                buildStatCard("Đã duyệt", String.valueOf(approved), "", "#4CAF50"),
+                buildStatCard("Tỷ lệ duyệt", approvalRate + "%", rateTrend, "#7B1FA2")
+        );
+    }
+
+    private VBox buildStatCard(String label, String value, String trend, String color) {
+        VBox card = new VBox(4);
+        card.setPadding(new Insets(14, 18, 14, 18));
+        card.setStyle("-fx-background-color: white; -fx-background-radius: 8; " +
+                "-fx-border-color: #e0e0e0; -fx-border-width: 1; -fx-border-radius: 8;");
+        card.setPrefWidth(180);
+
+        Label titleLabel = new Label(label);
+        titleLabel.setStyle("-fx-text-fill: #666; -fx-font-size: 12;");
+
+        Label valueLabel = new Label(value);
+        valueLabel.setStyle("-fx-font-size: 26; -fx-font-weight: bold; -fx-text-fill: " + color + ";");
+
+        card.getChildren().addAll(titleLabel, valueLabel);
+
+        if (!trend.isEmpty()) {
+            Label trendLabel = new Label(trend);
+            trendLabel.setStyle("-fx-text-fill: #4CAF50; -fx-font-size: 11;");
+            card.getChildren().add(trendLabel);
+        }
+        return card;
     }
 
     private void showDetail(ImportRequest request) {
@@ -195,6 +277,10 @@ public class RequestsView {
         dialog.setResultConverter(button -> button == javafx.scene.control.ButtonType.OK);
 
         dialog.showAndWait().filter(Boolean::booleanValue).ifPresent(ignored -> {
+            String action = target == null ? "tạo yêu cầu nhập hàng mới" : "chỉnh sửa yêu cầu " + target.getRequestCode();
+            if (!UiUtil.confirm("Xác nhận", "Bạn có chắc chắn muốn " + action + "?")) {
+                return;
+            }
             try {
                 List<MerchandiseRequest> items = new ArrayList<>();
                 items.add(new MerchandiseRequest(
