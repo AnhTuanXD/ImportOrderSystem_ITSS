@@ -3,6 +3,7 @@ package com.itss.importorder;
 import com.itss.importorder.controller.DiaDiemNhapController;
 import com.itss.importorder.controller.KiemHangController;
 import com.itss.importorder.controller.PhuongAnController;
+import com.itss.importorder.controller.QuanTriTaiKhoanController;
 import com.itss.importorder.controller.XacThucController;
 import com.itss.importorder.controller.YeuCauNhapHangController;
 import com.itss.importorder.entity.TonKho;
@@ -14,11 +15,12 @@ import java.util.List;
 
 public class AppContext {
     private final DataStore store = SampleDataFactory.create();
-    private final XacThucController xacThucController       = new XacThucController(store);
-    private final YeuCauNhapHangController ycnhController   = new YeuCauNhapHangController(store);
-    private final DiaDiemNhapController diaDiemController   = new DiaDiemNhapController(store);
-    private final PhuongAnController phuongAnController      = new PhuongAnController(store);
-    private final KiemHangController kiemHangController      = new KiemHangController(store);
+    private final XacThucController xacThucController             = new XacThucController(store);
+    private final YeuCauNhapHangController ycnhController         = new YeuCauNhapHangController(store);
+    private final DiaDiemNhapController diaDiemController         = new DiaDiemNhapController(store);
+    private final PhuongAnController phuongAnController            = new PhuongAnController(store);
+    private final KiemHangController kiemHangController            = new KiemHangController(store);
+    private final QuanTriTaiKhoanController quanTriController      = new QuanTriTaiKhoanController(store);
 
     public XacThucController getXacThucController() {
         return xacThucController;
@@ -55,5 +57,9 @@ public class AppContext {
 
     public void deleteTonKho(String siteCode, String merchandiseCode) throws SQLException {
         store.deleteTonKho(siteCode, merchandiseCode);
+    }
+
+    public QuanTriTaiKhoanController getQuanTriTaiKhoanController() {
+        return quanTriController;
     }
 }

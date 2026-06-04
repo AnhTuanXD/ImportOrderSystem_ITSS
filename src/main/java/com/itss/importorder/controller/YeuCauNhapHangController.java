@@ -20,18 +20,20 @@ public class YeuCauNhapHangController {
         this.store = store;
     }
 
-    public List<YeuCauNhapHang> findAll() {
+    /** createdBy = null → trả về tất cả; có giá trị → chỉ trả về của tài khoản đó */
+    public List<YeuCauNhapHang> findAll(String createdBy) {
         return store.getYeuCauNhapHangs().stream()
+                .filter(r -> createdBy == null || r.getCreatedBy().equals(createdBy))
                 .sorted(Comparator.comparing(YeuCauNhapHang::getCreatedDate).reversed())
                 .collect(Collectors.toList());
     }
 
-    public List<YeuCauNhapHang> search(String keyword) {
+    public List<YeuCauNhapHang> search(String keyword, String createdBy) {
         if (keyword == null || keyword.isBlank()) {
-            return findAll();
+            return findAll(createdBy);
         }
         String normalized = keyword.toLowerCase(Locale.ROOT).trim();
-        return findAll().stream()
+        return findAll(createdBy).stream()
                 .filter(r -> r.getRequestCode().toLowerCase(Locale.ROOT).contains(normalized)
                         || r.getStatus().getDisplayName().toLowerCase(Locale.ROOT).contains(normalized)
                         || r.getItems().stream().anyMatch(item ->
@@ -41,7 +43,7 @@ public class YeuCauNhapHangController {
 
     public YeuCauNhapHang create(String createdBy, List<ChiTietHangHoa> items) {
         validateItems(items);
-        String code = "REQ-2025-" + String.format("%03d", store.getYeuCauNhapHangs().size() + 1);
+        String code = "REQ-2026-" + String.format("%03d", store.getYeuCauNhapHangs().size() + 1);
         YeuCauNhapHang ycnh = new YeuCauNhapHang(code, createdBy, LocalDate.now(), TrangThaiYeuCau.SENT);
         ycnh.getItems().addAll(items);
         try {
@@ -74,6 +76,29 @@ public class YeuCauNhapHangController {
         }
     }
 
+    public void updateTrangThai(YeuCauNhapHang ycnh, TrangThaiYeuCau trangThai) {
+        ycnh.setStatus(trangThai);
+        try {
+            store.saveYeuCauNhapHang(ycnh);
+        } catch (SQLException e) {
+            throw new ValidationException("Lỗi cập nhật trạng thái: " + e.getMessage());
+        }
+    }
+
+    /** Trả về các đơn hàng PLANNING được phân bổ cho site này */
+    public List<YeuCauNhapHang> findPlanningForSite(String siteCode) {
+        java.util.Set<String> requestCodes = store.getPhuongAnNhapHangs().stream()
+                .filter(p -> p.getAllocations().stream()
+                        .anyMatch(a -> a.getSiteCode().equals(siteCode)))
+                .map(com.itss.importorder.entity.PhuongAnNhapHang::getRequestCode)
+                .collect(java.util.stream.Collectors.toSet());
+        return store.getYeuCauNhapHangs().stream()
+                .filter(r -> r.getStatus() == TrangThaiYeuCau.PLANNING
+                        && requestCodes.contains(r.getRequestCode()))
+                .sorted(Comparator.comparing(YeuCauNhapHang::getCreatedDate).reversed())
+                .collect(Collectors.toList());
+    }
+
     public Optional<YeuCauNhapHang> findByCode(String requestCode) {
         return store.getYeuCauNhapHangs().stream()
                 .filter(r -> r.getRequestCode().equals(requestCode))
@@ -97,11 +122,8 @@ public class YeuCauNhapHangController {
             if (item.getUnit() == null || item.getUnit().isBlank()) {
                 throw new ValidationException("Đơn vị không được để trống.");
             }
-            if (item.getStockLevel() < 0) {
-                throw new ValidationException("Mức tồn kho không được âm.");
-            }
-            if (item.getRequestDate() == null || item.getRequestDate().isBefore(LocalDate.now())) {
-                throw new ValidationException("Ngày yêu cầu phải từ hôm nay trở đi.");
+            if (item.getRequestDate() == null) {
+                throw new ValidationException("Ngày yêu cầu không được để trống.");
             }
             if (item.getDesiredDeliveryDate() == null || item.getDesiredDeliveryDate().isBefore(item.getRequestDate())) {
                 throw new ValidationException("Ngày cần hàng phải sau ngày yêu cầu.");

@@ -1,6 +1,7 @@
 package com.itss.importorder.boundary;
 
 import com.itss.importorder.AppContext;
+import com.itss.importorder.entity.DiaDiemNhap;
 import com.itss.importorder.entity.NguoiDung;
 import com.itss.importorder.entity.TonKho;
 import com.itss.importorder.util.UiUtil;
@@ -41,10 +42,11 @@ public class TonKhoBoundary {
         toolbar.getStyleClass().add("toolbar");
 
         table.getColumns().addAll(
-                UiUtil.column("Mã hàng",         TonKho::getMerchandiseCode,                           150),
-                UiUtil.column("Số lượng tồn",    r -> String.valueOf(r.getInStockQuantity()),           130),
-                UiUtil.column("Đơn vị",           TonKho::getUnit,                                      100),
-                UiUtil.column("Trạng thái",       r -> r.getInStockQuantity() < 100 ? "⚠ Tồn kho thấp" : "Bình thường", 160));
+                UiUtil.column("Mã hàng",         TonKho::getMerchandiseCode,                            130),
+                UiUtil.column("Tên mặt hàng",    TonKho::getMerchandiseName,                            200),
+                UiUtil.column("Đơn vị",           TonKho::getUnit,                                       90),
+                UiUtil.column("Số lượng tồn",    r -> String.valueOf(r.getInStockQuantity()),            110),
+                UiUtil.column("Trạng thái",       r -> r.getInStockQuantity() < 100 ? "⚠ Tồn kho thấp" : "Bình thường", 150));
         UiUtil.setupTable(table);
         table.setPlaceholder(new Label("Chưa có mặt hàng nào trong kho."));
 
@@ -65,8 +67,15 @@ public class TonKhoBoundary {
         return page;
     }
 
+    private String resolveSiteCode() {
+        return context.getDiaDiemNhapController()
+                .findByTaiKhoan(nguoiDung.getUsername())
+                .map(DiaDiemNhap::getSiteCode)
+                .orElse(nguoiDung.getUsername());
+    }
+
     private void refresh() {
-        List<TonKho> records = context.getTonKhos(nguoiDung.getUsername());
+        List<TonKho> records = context.getTonKhos(resolveSiteCode());
         table.setItems(FXCollections.observableArrayList(records));
         updateStats(records);
     }
@@ -99,6 +108,7 @@ public class TonKhoBoundary {
     private void showTonKhoDialog(TonKho existing) {
         TextField code     = new TextField(existing == null ? "" : existing.getMerchandiseCode());
         code.setDisable(existing != null);
+        TextField itemName = new TextField(existing == null ? "" : existing.getMerchandiseName());
         TextField quantity = new TextField(existing == null ? "0" : String.valueOf(existing.getInStockQuantity()));
         TextField unit     = new TextField(existing == null ? "pcs" : existing.getUnit());
 
@@ -106,9 +116,10 @@ public class TonKhoBoundary {
         form.setPadding(new Insets(12));
         form.setVgap(10);
         form.setHgap(10);
-        form.addRow(0, new Label("Mã hàng *"),   code);
-        form.addRow(1, new Label("Số lượng *"),   quantity);
-        form.addRow(2, new Label("Đơn vị *"),     unit);
+        form.addRow(0, new Label("Mã hàng *"),       code);
+        form.addRow(1, new Label("Tên mặt hàng *"),  itemName);
+        form.addRow(2, new Label("Số lượng *"),       quantity);
+        form.addRow(3, new Label("Đơn vị *"),         unit);
 
         Dialog<Boolean> dialog = new Dialog<>();
         dialog.setTitle(existing == null ? "Thêm mặt hàng mới" : "Cập nhật mặt hàng");
@@ -119,11 +130,10 @@ public class TonKhoBoundary {
         dialog.showAndWait().filter(Boolean::booleanValue).ifPresent(ignored -> {
             try {
                 int qty = Integer.parseInt(quantity.getText().trim());
-                if (code.getText().trim().isEmpty()) {
-                    UiUtil.error("Mã hàng không được để trống.");
-                    return;
-                }
-                context.saveTonKho(new TonKho(nguoiDung.getUsername(), code.getText().trim(), qty, unit.getText().trim()));
+                if (code.getText().trim().isEmpty()) { UiUtil.error("Mã hàng không được để trống."); return; }
+                if (itemName.getText().trim().isEmpty()) { UiUtil.error("Tên mặt hàng không được để trống."); return; }
+                context.saveTonKho(new TonKho(resolveSiteCode(), code.getText().trim(),
+                        itemName.getText().trim(), qty, unit.getText().trim()));
                 refresh();
                 UiUtil.info("Thành công", existing == null ? "Mặt hàng đã được thêm vào kho." : "Số lượng tồn kho đã được cập nhật.");
             } catch (NumberFormatException ex) {

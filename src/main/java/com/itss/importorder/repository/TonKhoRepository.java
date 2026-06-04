@@ -8,16 +8,18 @@ import java.util.List;
 public class TonKhoRepository {
 
     public void save(TonKho tonKho) throws SQLException {
-        String sql = "INSERT INTO stock_records (site_code, merchandise_code, in_stock_quantity, unit) " +
-                     "VALUES (?, ?, ?, ?) " +
+        String sql = "INSERT INTO stock_records (site_code, merchandise_code, merchandise_name, in_stock_quantity, unit) " +
+                     "VALUES (?, ?, ?, ?, ?) " +
                      "ON CONFLICT (site_code, merchandise_code) DO UPDATE SET " +
+                     "merchandise_name = EXCLUDED.merchandise_name, " +
                      "in_stock_quantity = EXCLUDED.in_stock_quantity, unit = EXCLUDED.unit";
         try (Connection conn = KetNoiCSDL.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, tonKho.getSiteCode());
             pstmt.setString(2, tonKho.getMerchandiseCode());
-            pstmt.setInt(3, tonKho.getInStockQuantity());
-            pstmt.setString(4, tonKho.getUnit());
+            pstmt.setString(3, tonKho.getMerchandiseName());
+            pstmt.setInt(4, tonKho.getInStockQuantity());
+            pstmt.setString(5, tonKho.getUnit());
             pstmt.executeUpdate();
         }
     }
@@ -33,6 +35,7 @@ public class TonKhoRepository {
                     list.add(new TonKho(
                         rs.getString("site_code"),
                         rs.getString("merchandise_code"),
+                        rs.getString("merchandise_name"),
                         rs.getInt("in_stock_quantity"),
                         rs.getString("unit")
                     ));
@@ -52,6 +55,7 @@ public class TonKhoRepository {
                 list.add(new TonKho(
                     rs.getString("site_code"),
                     rs.getString("merchandise_code"),
+                    rs.getString("merchandise_name"),
                     rs.getInt("in_stock_quantity"),
                     rs.getString("unit")
                 ));

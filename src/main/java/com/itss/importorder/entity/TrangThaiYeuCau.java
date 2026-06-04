@@ -1,9 +1,8 @@
 package com.itss.importorder.entity;
 
 public enum TrangThaiYeuCau {
-    DRAFT("Nhập"),
     SENT("Đã gửi"),
-    PLANNING("Đang lập phương án"),
+    PLANNING("Đã lập phương án"),
     ORDERED("Đã đặt hàng"),
     RECEIVED("Đã nhập kho"),
     CANCELLED("Đã hủy");

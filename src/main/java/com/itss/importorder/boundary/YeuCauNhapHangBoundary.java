@@ -4,6 +4,7 @@ import com.itss.importorder.AppContext;
 import com.itss.importorder.entity.ChiTietHangHoa;
 import com.itss.importorder.entity.NguoiDung;
 import com.itss.importorder.entity.TrangThaiYeuCau;
+import com.itss.importorder.entity.VaiTro;
 import com.itss.importorder.entity.YeuCauNhapHang;
 import com.itss.importorder.util.UiUtil;
 import com.itss.importorder.util.ValidationException;
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
@@ -44,10 +46,13 @@ public class YeuCauNhapHangBoundary {
 
         TextField search    = new TextField();
         search.setPromptText("Tìm theo mã yêu cầu, trạng thái, mã hàng");
+        boolean isOverseas = nguoiDung.getVaiTro() == VaiTro.OVERSEAS_ORDER;
+
         Button searchButton = UiUtil.primaryButton("Tìm kiếm");
         Button showAll      = new Button("Xem tất cả");
         Button create       = UiUtil.primaryButton("Tạo yêu cầu");
-        HBox toolbar = new HBox(10, search, searchButton, showAll, create);
+        HBox toolbar = new HBox(10, search, searchButton, showAll);
+        if (!isOverseas) toolbar.getChildren().add(create);
         toolbar.getStyleClass().add("toolbar");
 
         table.getColumns().addAll(
@@ -63,17 +68,18 @@ public class YeuCauNhapHangBoundary {
         Button detail = new Button("Xem chi tiết");
         Button edit   = new Button("Chỉnh sửa");
         Button delete = UiUtil.dangerButton("Xóa yêu cầu");
-        HBox actions  = new HBox(10, detail, edit, delete);
+        HBox actions  = new HBox(10, detail);
+        if (!isOverseas) actions.getChildren().addAll(edit, delete);
 
-        searchButton.setOnAction(event -> refresh(context.getYeuCauNhapHangController().search(search.getText())));
-        showAll.setOnAction(event -> refresh(context.getYeuCauNhapHangController().findAll()));
+        searchButton.setOnAction(event -> refresh(context.getYeuCauNhapHangController().search(search.getText(), ownerFilter())));
+        showAll.setOnAction(event -> refresh(context.getYeuCauNhapHangController().findAll(ownerFilter())));
         create.setOnAction(event -> showRequestDialog(null));
         detail.setOnAction(event -> showDetail(table.getSelectionModel().getSelectedItem()));
         edit.setOnAction(event -> showRequestDialog(table.getSelectionModel().getSelectedItem()));
         delete.setOnAction(event -> deleteSelected());
 
         page.getChildren().addAll(title, statsBar, toolbar, table, actions);
-        refresh(context.getYeuCauNhapHangController().findAll());
+        refresh(context.getYeuCauNhapHangController().findAll(ownerFilter()));
         return page;
     }
 
@@ -85,7 +91,7 @@ public class YeuCauNhapHangBoundary {
     private void updateStats(List<YeuCauNhapHang> requests) {
         int total    = requests.size();
         long pending  = requests.stream()
-                .filter(r -> r.getStatus() == TrangThaiYeuCau.DRAFT || r.getStatus() == TrangThaiYeuCau.SENT)
+                .filter(r -> r.getStatus() == TrangThaiYeuCau.SENT)
                 .count();
         long approved = requests.stream()
                 .filter(r -> r.getStatus() == TrangThaiYeuCau.ORDERED || r.getStatus() == TrangThaiYeuCau.RECEIVED)
@@ -163,22 +169,25 @@ public class YeuCauNhapHangBoundary {
             VBox itemDetail = new VBox(8);
             itemDetail.setPadding(new Insets(12));
             itemDetail.setStyle("-fx-border-color: #ddd; -fx-border-radius: 5; -fx-background-color: #f9f9f9;");
+            boolean salesView = nguoiDung.getVaiTro() == VaiTro.SALES;
             itemDetail.getChildren().addAll(
-                    createDetailRow("Mã hàng",             item.getMerchandiseCode()),
-                    createDetailRow("Tên mặt hàng",        item.getMerchandiseName()),
-                    createDetailRow("Danh mục",             item.getCategory()),
+                    createDetailRow("Mã hàng",         item.getMerchandiseCode()),
+                    createDetailRow("Tên mặt hàng",    item.getMerchandiseName()),
+                    createDetailRow("Danh mục",         item.getCategory()),
                     new javafx.scene.control.Separator(),
-                    createDetailRow("Số lượng",             String.valueOf(item.getQuantityOrdered())),
-                    createDetailRow("Đơn vị",               item.getUnit()),
-                    createDetailRow("Mức tồn kho",          String.valueOf(item.getStockLevel())),
+                    createDetailRow("Số lượng",         String.valueOf(item.getQuantityOrdered())),
+                    createDetailRow("Đơn vị",           item.getUnit()),
                     new javafx.scene.control.Separator(),
-                    createDetailRow("Ngày yêu cầu",         item.getRequestDate().toString()),
-                    createDetailRow("Ngày cần hàng",        item.getDesiredDeliveryDate().toString()),
+                    createDetailRow("Ngày yêu cầu",     item.getRequestDate().toString()),
+                    createDetailRow("Ngày cần hàng",    item.getDesiredDeliveryDate().toString()),
                     new javafx.scene.control.Separator(),
-                    createDetailRow("Nhà cung cấp",         item.getSupplier()),
-                    createDetailRow("Giá ước tính (USD)",   String.format("%.2f", item.getEstimatedPrice())),
+                    createDetailRow("Ghi chú",          item.getNotes()));
+            if (!salesView) {
+                itemDetail.getChildren().addAll(
                     new javafx.scene.control.Separator(),
-                    createDetailRow("Ghi chú",              item.getNotes()));
+                    createDetailRow("Nhà cung cấp",       item.getSupplier()),
+                    createDetailRow("Giá ước tính (USD)", String.format("%.2f", item.getEstimatedPrice())));
+            }
             itemsBox.getChildren().add(itemDetail);
         }
 
@@ -206,76 +215,131 @@ public class YeuCauNhapHangBoundary {
     }
 
     private void showRequestDialog(YeuCauNhapHang target) {
-        ChiTietHangHoa item = (target == null || target.getItems().isEmpty()) ? null : target.getItems().get(0);
+        // --- Danh sách mặt hàng (observable để table tự cập nhật) ---
+        ObservableList<ChiTietHangHoa> itemsList = FXCollections.observableArrayList();
+        if (target != null) itemsList.addAll(target.getItems());
 
-        TextField code       = new TextField(item == null ? "CPU-I7" : item.getMerchandiseCode());
-        TextField name       = new TextField(item == null ? "Electronic Component A" : item.getMerchandiseName());
-        TextField category   = new TextField(item == null ? "Electronics" : item.getCategory());
-        TextField quantity   = new TextField(item == null ? "50" : String.valueOf(item.getQuantityOrdered()));
-        TextField unit       = new TextField(item == null ? "PCS (Cái)" : item.getUnit());
-        TextField stockLevel = new TextField(item == null ? "0" : String.valueOf(item.getStockLevel()));
-        DatePicker requestDate  = new DatePicker(item == null ? LocalDate.now() : item.getRequestDate());
-        DatePicker desiredDate  = new DatePicker(item == null ? LocalDate.now().plusDays(10) : item.getDesiredDeliveryDate());
-        TextField supplier   = new TextField(item == null ? "Nhà cung cấp mặc định" : item.getSupplier());
-        TextField price      = new TextField(item == null ? "0.00" : String.valueOf(item.getEstimatedPrice()));
-        javafx.scene.control.TextArea notes = new javafx.scene.control.TextArea(item == null ? "" : item.getNotes());
+        TableView<ChiTietHangHoa> itemsTable = new TableView<>(itemsList);
+        itemsTable.setPrefHeight(150);
+        itemsTable.setPlaceholder(new Label("Chưa có mặt hàng. Điền form bên dưới rồi nhấn \"+ Thêm\"."));
+        itemsTable.getColumns().addAll(
+                UiUtil.column("Mã hàng",     ChiTietHangHoa::getMerchandiseCode,              100),
+                UiUtil.column("Tên mặt hàng",ChiTietHangHoa::getMerchandiseName,              200),
+                UiUtil.column("Số lượng",    i -> String.valueOf(i.getQuantityOrdered()),       80),
+                UiUtil.column("Đơn vị",      ChiTietHangHoa::getUnit,                          80),
+                UiUtil.column("Giá (USD)",   i -> String.format("%.2f", i.getEstimatedPrice()), 90));
+
+        Button removeBtn = UiUtil.dangerButton("Xóa mặt hàng đã chọn");
+        removeBtn.setOnAction(e -> {
+            ChiTietHangHoa sel = itemsTable.getSelectionModel().getSelectedItem();
+            if (sel != null) itemsList.remove(sel);
+            else UiUtil.error("Vui lòng chọn mặt hàng cần xóa trong danh sách.");
+        });
+
+        // --- Form nhập mặt hàng mới ---
+        boolean isSales = nguoiDung.getVaiTro() == VaiTro.SALES;
+
+        TextField code       = new TextField();
+        TextField name       = new TextField();
+        TextField category   = new TextField("Electronics");
+        TextField quantity   = new TextField("1");
+        TextField unit       = new TextField("PCS (Cái)");
+        DatePicker requestDate = new DatePicker(LocalDate.now());
+        DatePicker desiredDate = new DatePicker(LocalDate.now().plusDays(10));
+        TextField supplier   = new TextField("Nhà cung cấp mặc định");
+        TextField price      = new TextField("0.00");
+        javafx.scene.control.TextArea notes = new javafx.scene.control.TextArea();
         notes.setWrapText(true);
-        notes.setPrefRowCount(3);
+        notes.setPrefRowCount(2);
 
-        VBox form = new VBox(15);
-        form.setPadding(new Insets(15));
-        form.setStyle("-fx-border-color: #f0f0f0;");
-        form.getChildren().addAll(
-                createSection("Thông tin cơ bản",
-                        createRow("Mã hàng *",       code),
-                        createRow("Tên mặt hàng *",  name),
-                        createRow("Danh mục",         category)),
-                createSection("Số lượng & Đơn vị",
-                        createRow("Số lượng *",      quantity),
-                        createRow("Đơn vị *",         unit),
-                        createRow("Mức tồn kho *",   stockLevel)),
-                createSection("Thời gian",
-                        createRow("Ngày yêu cầu *",  requestDate),
-                        createRow("Ngày cần hàng *", desiredDate)),
-                createSection("Nhà cung cấp & giá",
-                        createRow("Tên nhà cung cấp",     supplier),
-                        createRow("Giá ước tính (USD)",   price)),
-                createSection("Ghi chú bổ sung", new Label("Ghi chú"), notes));
+        Button addItemBtn = UiUtil.primaryButton("+ Thêm vào danh sách");
+        addItemBtn.setOnAction(e -> {
+            try {
+                if (code.getText().isBlank()) { UiUtil.error("Mã hàng không được để trống."); return; }
+                if (name.getText().isBlank()) { UiUtil.error("Tên mặt hàng không được để trống."); return; }
+                int qty = Integer.parseInt(quantity.getText().trim());
+                if (qty <= 0) { UiUtil.error("Số lượng phải lớn hơn 0."); return; }
+                if (unit.getText().isBlank()) { UiUtil.error("Đơn vị không được để trống."); return; }
+                double estimatedPrice = isSales ? 0.0 : Double.parseDouble(price.getText().trim());
+                itemsList.add(new ChiTietHangHoa(
+                        code.getText().trim(), name.getText().trim(), category.getText().trim(),
+                        qty, unit.getText().trim(),
+                        0,
+                        requestDate.getValue(), desiredDate.getValue(),
+                        isSales ? "" : supplier.getText().trim(),
+                        estimatedPrice,
+                        notes.getText().trim()));
+                code.clear(); name.clear(); quantity.setText("1"); notes.clear();
+                code.requestFocus();
+            } catch (NumberFormatException ex) {
+                UiUtil.error("Số lượng hoặc Giá không đúng định dạng số.");
+            }
+        });
 
-        javafx.scene.control.ScrollPane scroll = new javafx.scene.control.ScrollPane(form);
-        scroll.setFitToWidth(true);
+        VBox itemForm = new VBox(12);
+        itemForm.setPadding(new Insets(10, 10, 4, 10));
+        VBox basicSection = createSection("Thông tin cơ bản",
+                createRow("Mã hàng *",       code),
+                createRow("Tên mặt hàng *",  name),
+                createRow("Danh mục",         category));
+        VBox qtySection = createSection("Số lượng & Đơn vị",
+                createRow("Số lượng *",      quantity),
+                createRow("Đơn vị *",         unit));
+        VBox timeSection = createSection("Thời gian",
+                createRow("Ngày yêu cầu *",  requestDate),
+                createRow("Ngày cần hàng *", desiredDate));
+        VBox noteSection = createSection("Ghi chú", new Label("Ghi chú"), notes);
+
+        itemForm.getChildren().addAll(basicSection, qtySection, timeSection);
+        if (!isSales) {
+            itemForm.getChildren().add(createSection("Nhà cung cấp & giá",
+                    createRow("Tên nhà cung cấp",    supplier),
+                    createRow("Giá ước tính (USD)",  price)));
+        }
+        itemForm.getChildren().addAll(noteSection, addItemBtn);
+
+        javafx.scene.control.ScrollPane formScroll = new javafx.scene.control.ScrollPane(itemForm);
+        formScroll.setFitToWidth(true);
+        formScroll.setPrefHeight(380);
+
+        // --- Layout tổng thể của dialog ---
+        Label listLabel = new Label("Danh sách mặt hàng trong yêu cầu");
+        listLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 13;");
+        Label formLabel = new Label("Nhập thông tin để thêm mặt hàng");
+        formLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 13;");
+
+        VBox dialogContent = new VBox(10);
+        dialogContent.setPadding(new Insets(12));
+        dialogContent.getChildren().addAll(
+                listLabel, itemsTable, removeBtn,
+                new javafx.scene.control.Separator(),
+                formLabel, formScroll);
 
         Dialog<Boolean> dialog = new Dialog<>();
         dialog.setTitle(target == null ? "Tạo yêu cầu nhập hàng" : "Chỉnh sửa yêu cầu nhập hàng");
         DialogPane pane = dialog.getDialogPane();
-        pane.setContent(scroll);
-        pane.setPrefWidth(600);
+        pane.setContent(dialogContent);
+        pane.setPrefWidth(700);
+        pane.setPrefHeight(720);
         pane.getButtonTypes().addAll(javafx.scene.control.ButtonType.OK, javafx.scene.control.ButtonType.CANCEL);
         dialog.setResultConverter(button -> button == javafx.scene.control.ButtonType.OK);
 
         dialog.showAndWait().filter(Boolean::booleanValue).ifPresent(ignored -> {
+            if (itemsList.isEmpty()) {
+                UiUtil.error("Yêu cầu phải có ít nhất một mặt hàng.");
+                return;
+            }
             String action = target == null ? "tạo yêu cầu nhập hàng mới"
                     : "chỉnh sửa yêu cầu " + target.getRequestCode();
             if (!UiUtil.confirm("Xác nhận", "Bạn có chắc chắn muốn " + action + "?")) return;
             try {
-                List<ChiTietHangHoa> items = new ArrayList<>();
-                items.add(new ChiTietHangHoa(
-                        code.getText().trim(), name.getText().trim(), category.getText().trim(),
-                        Integer.parseInt(quantity.getText().trim()), unit.getText().trim(),
-                        Integer.parseInt(stockLevel.getText().trim()),
-                        requestDate.getValue(), desiredDate.getValue(),
-                        supplier.getText().trim(),
-                        Double.parseDouble(price.getText().trim()),
-                        notes.getText().trim()));
                 if (target == null) {
-                    context.getYeuCauNhapHangController().create(nguoiDung.getUsername(), items);
+                    context.getYeuCauNhapHangController().create(nguoiDung.getUsername(), new ArrayList<>(itemsList));
                 } else {
-                    context.getYeuCauNhapHangController().updateItems(target, items);
+                    context.getYeuCauNhapHangController().updateItems(target, new ArrayList<>(itemsList));
                 }
-                refresh(context.getYeuCauNhapHangController().findAll());
+                refresh(context.getYeuCauNhapHangController().findAll(ownerFilter()));
                 UiUtil.info("Thành công", "Dữ liệu yêu cầu nhập hàng đã được lưu.");
-            } catch (NumberFormatException ex) {
-                UiUtil.error("Vui lòng nhập đúng định dạng số cho: Số lượng, Mức tồn kho, Giá ước tính.");
             } catch (ValidationException ex) {
                 UiUtil.error(ex.getMessage());
             } catch (Exception ex) {
@@ -312,8 +376,13 @@ public class YeuCauNhapHangBoundary {
         if (ycnh == null) { UiUtil.error("Vui lòng chọn một yêu cầu."); return; }
         if (UiUtil.confirm("Xác nhận xóa", "Bạn chắc chắn muốn xóa " + ycnh.getRequestCode() + "?")) {
             context.getYeuCauNhapHangController().delete(ycnh);
-            refresh(context.getYeuCauNhapHangController().findAll());
+            refresh(context.getYeuCauNhapHangController().findAll(ownerFilter()));
             UiUtil.info("Xóa thành công", "Yêu cầu nhập hàng đã được xóa khỏi danh sách.");
         }
+    }
+
+    /** SALES chỉ thấy yêu cầu của chính mình; các role khác thấy tất cả. */
+    private String ownerFilter() {
+        return nguoiDung.getVaiTro() == VaiTro.SALES ? nguoiDung.getUsername() : null;
     }
 }

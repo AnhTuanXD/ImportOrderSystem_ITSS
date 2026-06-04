@@ -20,9 +20,7 @@ public class KiemHangController {
 
     public List<YeuCauNhapHang> findOrdersForChecking() {
         return store.getYeuCauNhapHangs().stream()
-                .filter(r -> r.getStatus() == TrangThaiYeuCau.ORDERED
-                        || r.getStatus() == TrangThaiYeuCau.RECEIVED
-                        || r.getStatus() == TrangThaiYeuCau.PLANNING)
+                .filter(r -> r.getStatus() == TrangThaiYeuCau.ORDERED)
                 .sorted(Comparator.comparing(YeuCauNhapHang::getCreatedDate).reversed())
                 .collect(Collectors.toList());
     }

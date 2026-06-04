@@ -42,11 +42,16 @@ public class CuaSoChinhBoundary {
         Button requests  = navButton("Yêu cầu nhập hàng",  () -> root.setCenter(new YeuCauNhapHangBoundary(context, nguoiDung).build()));
         Button sites     = navButton("Quản lý Site",        () -> root.setCenter(new DiaDiemNhapBoundary(context).build()));
         Button siteStock = navButton("Quản lý mặt hàng",   () -> root.setCenter(new TonKhoBoundary(context, nguoiDung).build()));
+        Button xacNhan   = navButton("Xác nhận đơn hàng",  () -> root.setCenter(new XacNhanDonHangBoundary(context, nguoiDung).build()));
         Button planning  = navButton("Lập phương án",       () -> root.setCenter(new PhuongAnNhapHangBoundary(context).build()));
         Button warehouse = navButton("Quản lý kho",         () -> root.setCenter(new KiemHangBoundary(context).build()));
+        Button admin     = navButton("Quản trị tài khoản", () -> root.setCenter(new QuanTriTaiKhoanBoundary(context, nguoiDung).build()));
         Button logout    = navButton("Đăng xuất",           onLogout);
 
         sidebar.getChildren().addAll(title, role, home);
+        if (nguoiDung.getVaiTro() == VaiTro.ADMIN) {
+            sidebar.getChildren().add(admin);
+        }
         if (nguoiDung.getVaiTro() == VaiTro.SALES || nguoiDung.getVaiTro() == VaiTro.OVERSEAS_ORDER) {
             sidebar.getChildren().add(requests);
         }
@@ -54,7 +59,7 @@ public class CuaSoChinhBoundary {
             sidebar.getChildren().add(sites);
         }
         if (nguoiDung.getVaiTro() == VaiTro.IMPORT_SITE) {
-            sidebar.getChildren().add(siteStock);
+            sidebar.getChildren().addAll(xacNhan, siteStock);
         }
         if (nguoiDung.getVaiTro() == VaiTro.OVERSEAS_ORDER) {
             sidebar.getChildren().add(planning);

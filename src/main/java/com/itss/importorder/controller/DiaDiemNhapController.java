@@ -29,12 +29,12 @@ public class DiaDiemNhapController {
                 .collect(Collectors.toList());
     }
 
-    public DiaDiemNhap add(String code, String name, String password, int shipDays, int airDays, String otherInfo) {
-        validate(code, name, password, shipDays, airDays);
+    public DiaDiemNhap add(String code, String name, String taiKhoan, int shipDays, int airDays, String otherInfo) {
+        validate(code, name, taiKhoan, shipDays, airDays);
         if (findByCode(code).isPresent()) {
             throw new ValidationException("Mã Site đã tồn tại.");
         }
-        DiaDiemNhap diaDiem = new DiaDiemNhap(code, name, password, shipDays, airDays, otherInfo, TrangThaiDiaDiem.ACTIVE);
+        DiaDiemNhap diaDiem = new DiaDiemNhap(code, name, taiKhoan, shipDays, airDays, otherInfo, TrangThaiDiaDiem.ACTIVE);
         try {
             store.saveDiaDiemNhap(diaDiem);
         } catch (SQLException e) {
@@ -44,10 +44,10 @@ public class DiaDiemNhapController {
         return diaDiem;
     }
 
-    public void update(DiaDiemNhap diaDiem, String name, String password, int shipDays, int airDays, String otherInfo) {
-        validate(diaDiem.getSiteCode(), name, password, shipDays, airDays);
+    public void update(DiaDiemNhap diaDiem, String name, String taiKhoan, int shipDays, int airDays, String otherInfo) {
+        validate(diaDiem.getSiteCode(), name, taiKhoan, shipDays, airDays);
         diaDiem.setName(name);
-        diaDiem.setPassword(password);
+        diaDiem.setTaiKhoan(taiKhoan);
         diaDiem.setDeliveryDaysByShip(shipDays);
         diaDiem.setDeliveryDaysByAir(airDays);
         diaDiem.setOtherInformation(otherInfo);
@@ -75,15 +75,21 @@ public class DiaDiemNhapController {
                 .findFirst();
     }
 
-    private void validate(String code, String name, String password, int shipDays, int airDays) {
+    public Optional<DiaDiemNhap> findByTaiKhoan(String taiKhoan) {
+        return store.getDiaDiemNhaps().stream()
+                .filter(s -> s.getTaiKhoan().equals(taiKhoan))
+                .findFirst();
+    }
+
+    private void validate(String code, String name, String taiKhoan, int shipDays, int airDays) {
         if (code == null || code.isBlank()) {
             throw new ValidationException("Mã Site không được để trống.");
         }
         if (name == null || name.isBlank()) {
             throw new ValidationException("Tên Site không được để trống.");
         }
-        if (password == null || password.length() < 6) {
-            throw new ValidationException("Mật khẩu Site tối thiểu 6 ký tự.");
+        if (taiKhoan == null || taiKhoan.isBlank()) {
+            throw new ValidationException("Tài khoản Site không được để trống.");
         }
         if (shipDays <= 0 || airDays <= 0) {
             throw new ValidationException("Số ngày vận chuyển phải lớn hơn 0.");

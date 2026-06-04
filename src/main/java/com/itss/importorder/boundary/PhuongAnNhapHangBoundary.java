@@ -93,7 +93,7 @@ public class PhuongAnNhapHangBoundary {
     }
 
     private void loadRequests() {
-        List<YeuCauNhapHang> requests = context.getYeuCauNhapHangController().findAll();
+        List<YeuCauNhapHang> requests = context.getYeuCauNhapHangController().findAll(null);
         requestBox.setItems(FXCollections.observableArrayList(requests));
         if (!requests.isEmpty()) {
             requestBox.getSelectionModel().selectFirst();

@@ -9,18 +9,18 @@ import java.util.List;
 public class DiaDiemNhapRepository {
 
     public void save(DiaDiemNhap diaDiem) throws SQLException {
-        String sql = "INSERT INTO import_sites (site_code, name, password, delivery_days_by_ship, " +
+        String sql = "INSERT INTO import_sites (site_code, name, tai_khoan, delivery_days_by_ship, " +
                      "delivery_days_by_air, other_information, status) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?) " +
                      "ON CONFLICT (site_code) DO UPDATE SET name = EXCLUDED.name, " +
-                     "password = EXCLUDED.password, delivery_days_by_ship = EXCLUDED.delivery_days_by_ship, " +
+                     "tai_khoan = EXCLUDED.tai_khoan, delivery_days_by_ship = EXCLUDED.delivery_days_by_ship, " +
                      "delivery_days_by_air = EXCLUDED.delivery_days_by_air, " +
                      "other_information = EXCLUDED.other_information, status = EXCLUDED.status";
         try (Connection conn = KetNoiCSDL.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, diaDiem.getSiteCode());
             pstmt.setString(2, diaDiem.getName());
-            pstmt.setString(3, diaDiem.getPassword());
+            pstmt.setString(3, diaDiem.getTaiKhoan());
             pstmt.setInt(4, diaDiem.getDeliveryDaysByShip());
             pstmt.setInt(5, diaDiem.getDeliveryDaysByAir());
             pstmt.setString(6, diaDiem.getOtherInformation());
@@ -69,7 +69,7 @@ public class DiaDiemNhapRepository {
         return new DiaDiemNhap(
             rs.getString("site_code"),
             rs.getString("name"),
-            rs.getString("password"),
+            rs.getString("tai_khoan"),
             rs.getInt("delivery_days_by_ship"),
             rs.getInt("delivery_days_by_air"),
             rs.getString("other_information"),

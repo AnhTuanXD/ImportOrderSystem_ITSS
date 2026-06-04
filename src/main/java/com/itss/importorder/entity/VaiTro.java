@@ -1,6 +1,7 @@
 package com.itss.importorder.entity;
 
 public enum VaiTro {
+    ADMIN("Quản trị hệ thống"),
     SALES("Bộ phận bán hàng"),
     OVERSEAS_ORDER("Bộ phận đặt hàng quốc tế"),
     IMPORT_SITE("Site nhập khẩu"),

@@ -52,7 +52,7 @@ public class PhuongAnController {
 
         try {
             store.savePhuongAnNhapHang(phuongAn);
-            ycnh.setStatus(TrangThaiYeuCau.ORDERED);
+            ycnh.setStatus(TrangThaiYeuCau.PLANNING);
             store.saveYeuCauNhapHang(ycnh);
         } catch (SQLException e) {
             System.err.println("Lỗi lưu phương án: " + e.getMessage());

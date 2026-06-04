@@ -54,6 +54,17 @@ CREATE TABLE IF NOT EXISTS import_plans (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Tạo bảng PlanAllocation (phân bổ site cho từng phương án)
+CREATE TABLE IF NOT EXISTS plan_allocations (
+    id SERIAL PRIMARY KEY,
+    plan_code VARCHAR(50) NOT NULL REFERENCES import_plans(plan_code) ON DELETE CASCADE,
+    site_code VARCHAR(50) NOT NULL,
+    merchandise_code VARCHAR(50) NOT NULL,
+    quantity_ordered INTEGER NOT NULL,
+    unit VARCHAR(50),
+    delivery_means VARCHAR(20) NOT NULL
+);
+
 -- Tạo bảng WarehouseReport
 CREATE TABLE IF NOT EXISTS warehouse_reports (
     id SERIAL PRIMARY KEY,
