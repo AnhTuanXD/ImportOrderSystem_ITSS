@@ -105,9 +105,9 @@ public class XacNhanDonHangBoundary {
         if (ycnh == null) return;
         if (!UiUtil.confirm("Xác nhận đơn hàng",
                 "Xác nhận đặt hàng cho " + ycnh.getRequestCode() + "?")) return;
-        context.getYeuCauNhapHangController().updateTrangThai(ycnh, TrangThaiYeuCau.ORDERED);
+        context.getYeuCauNhapHangController().confirmOrderForSite(ycnh, resolveSiteCode());
         refresh();
-        UiUtil.info("Thành công", "Đơn hàng " + ycnh.getRequestCode() + " đã chuyển sang Đã đặt hàng.");
+        UiUtil.info("Thành công", "Đơn hàng " + ycnh.getRequestCode() + " đã chuyển sang Đã đặt hàng và cập nhật tồn kho.");
     }
 
     private void cancelOrder() {

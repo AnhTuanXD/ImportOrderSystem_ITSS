@@ -3,6 +3,8 @@ package com.itss.importorder.boundary;
 import com.itss.importorder.AppContext;
 import com.itss.importorder.entity.BaoCaoKho;
 import com.itss.importorder.entity.ChiTietHangHoa;
+import com.itss.importorder.entity.NguoiDung;
+import com.itss.importorder.entity.VaiTro;
 import com.itss.importorder.entity.YeuCauNhapHang;
 import com.itss.importorder.util.UiUtil;
 import com.itss.importorder.util.ValidationException;
@@ -22,11 +24,13 @@ import javafx.scene.layout.VBox;
 
 public class KiemHangBoundary {
     private final AppContext context;
+    private final NguoiDung nguoiDung;
     private final TableView<YeuCauNhapHang> orderTable  = new TableView<>();
     private final TableView<BaoCaoKho>      reportTable = new TableView<>();
 
-    public KiemHangBoundary(AppContext context) {
+    public KiemHangBoundary(AppContext context, NguoiDung nguoiDung) {
         this.context = context;
+        this.nguoiDung = nguoiDung;
     }
 
     public Parent build() {
@@ -38,7 +42,12 @@ public class KiemHangBoundary {
 
         Button detail = new Button("Chi tiết đơn hàng");
         Button check  = UiUtil.primaryButton("Kiểm tra hoàn tất");
-        HBox toolbar  = new HBox(10, detail, check);
+        HBox toolbar;
+        if (nguoiDung != null && nguoiDung.getVaiTro() == VaiTro.OVERSEAS_ORDER) {
+            toolbar = new HBox(10, detail);
+        } else {
+            toolbar = new HBox(10, detail, check);
+        }
         toolbar.getStyleClass().add("toolbar");
 
         orderTable.getColumns().addAll(
@@ -100,6 +109,10 @@ public class KiemHangBoundary {
     }
 
     private void showCheckDialog() {
+        if (nguoiDung != null && nguoiDung.getVaiTro() == VaiTro.OVERSEAS_ORDER) {
+            UiUtil.error("Bạn không có quyền thực hiện chức năng này.");
+            return;
+        }
         YeuCauNhapHang ycnh = selected();
         if (ycnh == null) return;
 

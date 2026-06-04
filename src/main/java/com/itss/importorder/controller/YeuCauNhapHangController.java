@@ -1,6 +1,9 @@
 package com.itss.importorder.controller;
 
 import com.itss.importorder.entity.ChiTietHangHoa;
+import com.itss.importorder.entity.PhuongAnNhapHang;
+import com.itss.importorder.entity.PhanBo;
+import com.itss.importorder.entity.TonKho;
 import com.itss.importorder.entity.TrangThaiYeuCau;
 import com.itss.importorder.entity.YeuCauNhapHang;
 import com.itss.importorder.repository.DataStore;
@@ -82,6 +85,45 @@ public class YeuCauNhapHangController {
             store.saveYeuCauNhapHang(ycnh);
         } catch (SQLException e) {
             throw new ValidationException("Lỗi cập nhật trạng thái: " + e.getMessage());
+        }
+    }
+
+    public void confirmOrderForSite(YeuCauNhapHang ycnh, String siteCode) {
+        ycnh.setStatus(TrangThaiYeuCau.ORDERED);
+        try {
+            store.saveYeuCauNhapHang(ycnh);
+
+            List<PhuongAnNhapHang> plans = store.findPhuongAnsByRequestCode(ycnh.getRequestCode());
+            for (PhuongAnNhapHang plan : plans) {
+                for (PhanBo alloc : plan.getAllocations()) {
+                    if (alloc.getSiteCode().equalsIgnoreCase(siteCode)) {
+                        List<TonKho> stocks = store.findTonKhosBySiteCode(siteCode);
+                        Optional<TonKho> stockOpt = stocks.stream()
+                                .filter(s -> s.getMerchandiseCode().equalsIgnoreCase(alloc.getMerchandiseCode()))
+                                .findFirst();
+
+                        if (stockOpt.isPresent()) {
+                            TonKho stock = stockOpt.get();
+                            int newQty = stock.getInStockQuantity() - alloc.getQuantityOrdered();
+                            if (newQty < 0) {
+                                newQty = 0;
+                            }
+                            stock.setInStockQuantity(newQty);
+                            store.saveTonKho(stock);
+                        } else {
+                            String merchName = ycnh.getItems().stream()
+                                    .filter(item -> item.getMerchandiseCode().equalsIgnoreCase(alloc.getMerchandiseCode()))
+                                    .map(ChiTietHangHoa::getMerchandiseName)
+                                    .findFirst()
+                                    .orElse(alloc.getMerchandiseCode());
+                            TonKho stock = new TonKho(siteCode, alloc.getMerchandiseCode(), merchName, 0, alloc.getUnit());
+                            store.saveTonKho(stock);
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new ValidationException("Lỗi cập nhật trạng thái đơn hàng và tồn kho: " + e.getMessage());
         }
     }
 

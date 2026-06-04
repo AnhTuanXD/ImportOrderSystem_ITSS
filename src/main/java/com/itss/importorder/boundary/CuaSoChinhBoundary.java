@@ -44,7 +44,7 @@ public class CuaSoChinhBoundary {
         Button siteStock = navButton("Quản lý mặt hàng",   () -> root.setCenter(new TonKhoBoundary(context, nguoiDung).build()));
         Button xacNhan   = navButton("Xác nhận đơn hàng",  () -> root.setCenter(new XacNhanDonHangBoundary(context, nguoiDung).build()));
         Button planning  = navButton("Lập phương án",       () -> root.setCenter(new PhuongAnNhapHangBoundary(context).build()));
-        Button warehouse = navButton("Quản lý kho",         () -> root.setCenter(new KiemHangBoundary(context).build()));
+        Button warehouse = navButton("Quản lý kho",         () -> root.setCenter(new KiemHangBoundary(context, nguoiDung).build()));
         Button admin     = navButton("Quản trị tài khoản", () -> root.setCenter(new QuanTriTaiKhoanBoundary(context, nguoiDung).build()));
         Button logout    = navButton("Đăng xuất",           onLogout);
 
