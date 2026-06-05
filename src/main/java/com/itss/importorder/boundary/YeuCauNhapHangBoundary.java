@@ -304,7 +304,13 @@ public class YeuCauNhapHangBoundary {
                 int qty = Integer.parseInt(quantity.getText().trim());
                 if (qty <= 0) { UiUtil.error("Số lượng phải lớn hơn 0."); return; }
                 if (unit.getText().isBlank()) { UiUtil.error("Đơn vị không được để trống."); return; }
+                if (requestDate.getValue() == null) { UiUtil.error("Ngày yêu cầu không được để trống."); return; }
+                if (desiredDate.getValue() == null || desiredDate.getValue().isBefore(requestDate.getValue())) {
+                    UiUtil.error("Ngày cần hàng phải sau ngày yêu cầu.");
+                    return;
+                }
                 double estimatedPrice = isSales ? 0.0 : Double.parseDouble(price.getText().trim());
+                if (estimatedPrice < 0) { UiUtil.error("Giá ước tính không được âm."); return; }
                 
                 ChiTietHangHoa newItem = new ChiTietHangHoa(
                         code.getText().trim(), name.getText().trim(), category.getText().trim(),
