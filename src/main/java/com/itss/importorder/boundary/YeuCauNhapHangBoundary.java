@@ -183,10 +183,11 @@ public class YeuCauNhapHangBoundary {
                     new javafx.scene.control.Separator(),
                     createDetailRow("Ghi chú",          item.getNotes()));
             if (!salesView) {
-                itemDetail.getChildren().addAll(
-                    new javafx.scene.control.Separator(),
-                    createDetailRow("Nhà cung cấp",       item.getSupplier()),
-                    createDetailRow("Giá ước tính (USD)", String.format("%.2f", item.getEstimatedPrice())));
+                itemDetail.getChildren().add(new javafx.scene.control.Separator());
+                itemDetail.getChildren().add(createDetailRow("Nhà cung cấp", item.getSupplier()));
+                if (nguoiDung.getVaiTro() != VaiTro.OVERSEAS_ORDER) {
+                    itemDetail.getChildren().add(createDetailRow("Giá ước tính (USD)", String.format("%.2f", item.getEstimatedPrice())));
+                }
             }
             itemsBox.getChildren().add(itemDetail);
         }
