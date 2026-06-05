@@ -31,6 +31,15 @@ public class PhuongAnController {
         return store.getPhuongAnNhapHangs();
     }
 
+    public List<PhuongAnNhapHang> findPlansByRequestCode(String requestCode) {
+        try {
+            return store.findPhuongAnsByRequestCode(requestCode);
+        } catch (SQLException e) {
+            System.err.println("Lỗi lấy phương án: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
     public PhuongAnNhapHang createAutomaticPlan(YeuCauNhapHang ycnh, ChiTietHangHoa item) {
         List<UngVien> ungViens = findUngViens(item);
         int remaining = item.getQuantityOrdered();

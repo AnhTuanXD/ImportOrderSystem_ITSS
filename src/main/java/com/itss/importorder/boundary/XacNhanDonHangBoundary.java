@@ -6,6 +6,8 @@ import com.itss.importorder.entity.DiaDiemNhap;
 import com.itss.importorder.entity.NguoiDung;
 import com.itss.importorder.entity.TrangThaiYeuCau;
 import com.itss.importorder.entity.YeuCauNhapHang;
+import com.itss.importorder.entity.PhuongAnNhapHang;
+import com.itss.importorder.entity.PhanBo;
 import com.itss.importorder.util.UiUtil;
 import java.util.List;
 import javafx.collections.FXCollections;
@@ -48,7 +50,7 @@ public class XacNhanDonHangBoundary {
                 UiUtil.column("Ngày tạo",      r -> r.getCreatedDate().toString(),             120),
                 UiUtil.column("Người tạo",     YeuCauNhapHang::getCreatedBy,                  120),
                 UiUtil.column("Trạng thái",    r -> r.getStatus().getDisplayName(),            160),
-                UiUtil.column("Tổng SL",       r -> String.valueOf(r.getTotalQuantity()),        90));
+                UiUtil.column("Tổng SL",       r -> String.valueOf(getQuantityAllocatedToSite(r, resolveSiteCode())),        90));
         UiUtil.setupTable(table);
         table.setPlaceholder(new Label("Không có đơn hàng nào đang chờ xác nhận."));
 
@@ -81,8 +83,55 @@ public class XacNhanDonHangBoundary {
         return r;
     }
 
+    private int getQuantityAllocatedToSite(YeuCauNhapHang ycnh, String siteCode) {
+        List<PhuongAnNhapHang> plans = context.getPhuongAnController().findPlansByRequestCode(ycnh.getRequestCode());
+        int total = 0;
+        for (PhuongAnNhapHang plan : plans) {
+            for (PhanBo alloc : plan.getAllocations()) {
+                if (alloc.getSiteCode().equalsIgnoreCase(siteCode)) {
+                    total += alloc.getQuantityOrdered();
+                }
+            }
+        }
+        return total;
+    }
+
     private void showDetail(YeuCauNhapHang ycnh) {
         if (ycnh == null) return;
+
+        String siteCode = resolveSiteCode();
+        List<PhuongAnNhapHang> plans = context.getPhuongAnController().findPlansByRequestCode(ycnh.getRequestCode());
+        
+        java.util.List<ChiTietHangHoa> displayItems = new java.util.ArrayList<>();
+        for (ChiTietHangHoa item : ycnh.getItems()) {
+            int allocatedQty = 0;
+            for (PhuongAnNhapHang plan : plans) {
+                if (plan.getMerchandiseCode().equalsIgnoreCase(item.getMerchandiseCode())) {
+                    for (PhanBo alloc : plan.getAllocations()) {
+                        if (alloc.getSiteCode().equalsIgnoreCase(siteCode)) {
+                            allocatedQty += alloc.getQuantityOrdered();
+                        }
+                    }
+                }
+            }
+            if (allocatedQty > 0) {
+                ChiTietHangHoa copy = new ChiTietHangHoa(
+                        item.getMerchandiseCode(),
+                        item.getMerchandiseName(),
+                        item.getCategory(),
+                        allocatedQty,
+                        item.getUnit(),
+                        item.getStockLevel(),
+                        item.getRequestDate(),
+                        item.getDesiredDeliveryDate(),
+                        item.getSupplier(),
+                        item.getEstimatedPrice(),
+                        item.getNotes()
+                );
+                displayItems.add(copy);
+            }
+        }
+
         TableView<ChiTietHangHoa> items = new TableView<>();
         items.getColumns().addAll(
                 UiUtil.column("Mã hàng",    ChiTietHangHoa::getMerchandiseCode,              120),
@@ -91,7 +140,8 @@ public class XacNhanDonHangBoundary {
                 UiUtil.column("Đơn vị",     ChiTietHangHoa::getUnit,                          80),
                 UiUtil.column("Ngày cần",   i -> i.getDesiredDeliveryDate().toString(),       130));
         UiUtil.setupTable(items);
-        items.setItems(FXCollections.observableArrayList(ycnh.getItems()));
+        items.setItems(FXCollections.observableArrayList(displayItems));
+        
         Dialog<Void> dialog = new Dialog<>();
         dialog.setTitle("Chi tiết đơn hàng " + ycnh.getRequestCode());
         dialog.getDialogPane().setContent(items);
