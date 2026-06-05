@@ -28,13 +28,15 @@ import javafx.util.StringConverter;
 
 public class DiaDiemNhapBoundary {
     private final AppContext context;
+    private final NguoiDung nguoiDung;
     private final TableView<DiaDiemNhap> siteTable = new TableView<>();
     private final TableView<TonKho>      stockTable = new TableView<>();
     private final Label stockLabel = new Label();
     private final VBox  stockSection = new VBox(8);
 
-    public DiaDiemNhapBoundary(AppContext context) {
+    public DiaDiemNhapBoundary(AppContext context, NguoiDung nguoiDung) {
         this.context = context;
+        this.nguoiDung = nguoiDung;
     }
 
     public Parent build() {
@@ -71,7 +73,13 @@ public class DiaDiemNhapBoundary {
         Button editStock   = new Button("Sửa sản phẩm");
         Button deleteStock = UiUtil.dangerButton("Xóa sản phẩm");
         Button refreshStock = new Button("Làm mới tồn kho");
-        HBox stockToolbar = new HBox(10, addStock, editStock, deleteStock, refreshStock);
+        
+        HBox stockToolbar;
+        if (nguoiDung != null && nguoiDung.getVaiTro() == VaiTro.OVERSEAS_ORDER) {
+            stockToolbar = new HBox(10, refreshStock);
+        } else {
+            stockToolbar = new HBox(10, addStock, editStock, deleteStock, refreshStock);
+        }
 
         stockTable.getColumns().addAll(
                 UiUtil.column("Mã mặt hàng",  TonKho::getMerchandiseCode,                    130),

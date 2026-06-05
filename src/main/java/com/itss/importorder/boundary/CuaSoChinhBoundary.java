@@ -40,7 +40,7 @@ public class CuaSoChinhBoundary {
 
         Button home      = navButton("Trang chủ",           this::showHome);
         Button requests  = navButton("Yêu cầu nhập hàng",  () -> root.setCenter(new YeuCauNhapHangBoundary(context, nguoiDung).build()));
-        Button sites     = navButton("Quản lý Site",        () -> root.setCenter(new DiaDiemNhapBoundary(context).build()));
+        Button sites     = navButton("Quản lý Site",        () -> root.setCenter(new DiaDiemNhapBoundary(context, nguoiDung).build()));
         Button siteStock = navButton("Quản lý mặt hàng",   () -> root.setCenter(new TonKhoBoundary(context, nguoiDung).build()));
         Button xacNhan   = navButton("Xác nhận đơn hàng",  () -> root.setCenter(new XacNhanDonHangBoundary(context, nguoiDung).build()));
         Button planning  = navButton("Lập phương án",       () -> root.setCenter(new PhuongAnNhapHangBoundary(context).build()));
@@ -86,7 +86,7 @@ public class CuaSoChinhBoundary {
         Label title = new Label("Trang chủ");
         title.getStyleClass().add("page-title");
         Label summary = new Label("Chọn chức năng ở thanh bên để xử lý quy trình đặt hàng nhập khẩu.");
-        Label flow = new Label("Luồng chính: Bán hàng tạo yêu cầu -> Đặt hàng quốc tế lập phương án -> Kho kiểm hàng và báo cáo.");
+        Label flow = new Label("Luồng chính: Bán hàng tạo yêu cầu -> Đặt hàng quốc tế lập phương án -> Site xác nhận đơn hàng -> Kho kiểm hàng và báo cáo.");
         page.getChildren().addAll(title, summary, flow);
         root.setCenter(page);
     }
