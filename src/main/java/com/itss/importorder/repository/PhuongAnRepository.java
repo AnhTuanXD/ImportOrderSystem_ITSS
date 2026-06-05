@@ -34,8 +34,8 @@ public class PhuongAnRepository {
                 }
 
                 String sqlAlloc = "INSERT INTO plan_allocations " +
-                        "(plan_code, site_code, merchandise_code, quantity_ordered, unit, delivery_means) " +
-                        "VALUES (?, ?, ?, ?, ?, ?)";
+                        "(plan_code, site_code, merchandise_code, quantity_ordered, unit, delivery_means, confirmed) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?)";
                 try (PreparedStatement psAlloc = conn.prepareStatement(sqlAlloc)) {
                     for (PhanBo pb : phuongAn.getAllocations()) {
                         psAlloc.setString(1, phuongAn.getPlanCode());
@@ -44,6 +44,7 @@ public class PhuongAnRepository {
                         psAlloc.setInt(4, pb.getQuantityOrdered());
                         psAlloc.setString(5, pb.getUnit());
                         psAlloc.setString(6, pb.getPhuongThucGiaoHang().name());
+                        psAlloc.setBoolean(7, pb.isConfirmed());
                         psAlloc.executeUpdate();
                     }
                 }
@@ -57,7 +58,7 @@ public class PhuongAnRepository {
 
     public PhuongAnNhapHang findByCode(String planCode) throws SQLException {
         String sql = "SELECT ip.*, pa.site_code, pa.merchandise_code AS alloc_merch, " +
-                     "pa.quantity_ordered, pa.unit AS alloc_unit, pa.delivery_means " +
+                     "pa.quantity_ordered, pa.unit AS alloc_unit, pa.delivery_means, pa.confirmed " +
                      "FROM import_plans ip " +
                      "LEFT JOIN plan_allocations pa ON ip.plan_code = pa.plan_code " +
                      "WHERE ip.plan_code = ?";
@@ -72,7 +73,7 @@ public class PhuongAnRepository {
 
     public List<PhuongAnNhapHang> findByRequestCode(String requestCode) throws SQLException {
         String sql = "SELECT ip.*, pa.site_code, pa.merchandise_code AS alloc_merch, " +
-                     "pa.quantity_ordered, pa.unit AS alloc_unit, pa.delivery_means " +
+                     "pa.quantity_ordered, pa.unit AS alloc_unit, pa.delivery_means, pa.confirmed " +
                      "FROM import_plans ip " +
                      "LEFT JOIN plan_allocations pa ON ip.plan_code = pa.plan_code " +
                      "WHERE ip.request_code = ? ORDER BY ip.created_at DESC";
@@ -87,7 +88,7 @@ public class PhuongAnRepository {
 
     public List<PhuongAnNhapHang> findAll() throws SQLException {
         String sql = "SELECT ip.*, pa.site_code, pa.merchandise_code AS alloc_merch, " +
-                     "pa.quantity_ordered, pa.unit AS alloc_unit, pa.delivery_means " +
+                     "pa.quantity_ordered, pa.unit AS alloc_unit, pa.delivery_means, pa.confirmed " +
                      "FROM import_plans ip " +
                      "LEFT JOIN plan_allocations pa ON ip.plan_code = pa.plan_code " +
                      "ORDER BY ip.created_at DESC";
@@ -103,6 +104,18 @@ public class PhuongAnRepository {
         try (Connection conn = KetNoiCSDL.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, planCode);
+            pstmt.executeUpdate();
+        }
+    }
+
+    public void confirmAllocation(String planCode, String siteCode, String merchandiseCode) throws SQLException {
+        String sql = "UPDATE plan_allocations SET confirmed = TRUE " +
+                     "WHERE plan_code = ? AND site_code = ? AND merchandise_code = ?";
+        try (Connection conn = KetNoiCSDL.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, planCode);
+            pstmt.setString(2, siteCode);
+            pstmt.setString(3, merchandiseCode);
             pstmt.executeUpdate();
         }
     }
@@ -129,7 +142,8 @@ public class PhuongAnRepository {
                         rs.getString("alloc_merch"),
                         rs.getInt("quantity_ordered"),
                         rs.getString("alloc_unit"),
-                        PhuongThucGiaoHang.valueOf(rs.getString("delivery_means"))));
+                        PhuongThucGiaoHang.valueOf(rs.getString("delivery_means")),
+                        rs.getBoolean("confirmed")));
             }
         }
         return new ArrayList<>(map.values());

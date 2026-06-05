@@ -89,14 +89,18 @@ public class YeuCauNhapHangController {
     }
 
     public void confirmOrderForSite(YeuCauNhapHang ycnh, String siteCode) {
-        ycnh.setStatus(TrangThaiYeuCau.ORDERED);
         try {
-            store.saveYeuCauNhapHang(ycnh);
-
             List<PhuongAnNhapHang> plans = store.findPhuongAnsByRequestCode(ycnh.getRequestCode());
+            boolean updatedAny = false;
             for (PhuongAnNhapHang plan : plans) {
                 for (PhanBo alloc : plan.getAllocations()) {
-                    if (alloc.getSiteCode().equalsIgnoreCase(siteCode)) {
+                    if (alloc.getSiteCode().equalsIgnoreCase(siteCode) && !alloc.isConfirmed()) {
+                        // 1. Mark as confirmed in DB
+                        store.confirmAllocation(plan.getPlanCode(), siteCode, alloc.getMerchandiseCode());
+                        alloc.setConfirmed(true);
+                        updatedAny = true;
+
+                        // 2. Deduct stock
                         List<TonKho> stocks = store.findTonKhosBySiteCode(siteCode);
                         Optional<TonKho> stockOpt = stocks.stream()
                                 .filter(s -> s.getMerchandiseCode().equalsIgnoreCase(alloc.getMerchandiseCode()))
@@ -122,6 +126,26 @@ public class YeuCauNhapHangController {
                     }
                 }
             }
+
+            if (updatedAny) {
+                // Fetch the updated plans to see if all allocations of all plans are now confirmed
+                List<PhuongAnNhapHang> updatedPlans = store.findPhuongAnsByRequestCode(ycnh.getRequestCode());
+                boolean allConfirmed = true;
+                for (PhuongAnNhapHang plan : updatedPlans) {
+                    for (PhanBo alloc : plan.getAllocations()) {
+                        if (!alloc.isConfirmed()) {
+                            allConfirmed = false;
+                            break;
+                        }
+                    }
+                    if (!allConfirmed) break;
+                }
+
+                if (allConfirmed) {
+                    ycnh.setStatus(TrangThaiYeuCau.ORDERED);
+                    store.saveYeuCauNhapHang(ycnh);
+                }
+            }
         } catch (SQLException e) {
             throw new ValidationException("Lỗi cập nhật trạng thái đơn hàng và tồn kho: " + e.getMessage());
         }
@@ -131,7 +155,7 @@ public class YeuCauNhapHangController {
     public List<YeuCauNhapHang> findPlanningForSite(String siteCode) {
         java.util.Set<String> requestCodes = store.getPhuongAnNhapHangs().stream()
                 .filter(p -> p.getAllocations().stream()
-                        .anyMatch(a -> a.getSiteCode().equals(siteCode)))
+                        .anyMatch(a -> a.getSiteCode().equals(siteCode) && !a.isConfirmed()))
                 .map(com.itss.importorder.entity.PhuongAnNhapHang::getRequestCode)
                 .collect(java.util.stream.Collectors.toSet());
         return store.getYeuCauNhapHangs().stream()

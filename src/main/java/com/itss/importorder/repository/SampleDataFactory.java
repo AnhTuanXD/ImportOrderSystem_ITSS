@@ -18,11 +18,19 @@ public final class SampleDataFactory {
 
     public static DataStore create() {
         DataStore store = new DataStore();
+        runSeed("migration", () -> migratePlanAllocations());
         runSeed("users",    () -> seedUsers(store));
         runSeed("sites",    () -> seedSites(store));
         runSeed("stocks",   () -> seedStocks(store));
         runSeed("requests", () -> seedRequests(store));
         return store;
+    }
+
+    private static void migratePlanAllocations() throws SQLException {
+        try (java.sql.Connection conn = KetNoiCSDL.getConnection();
+             java.sql.Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("ALTER TABLE plan_allocations ADD COLUMN IF NOT EXISTS confirmed BOOLEAN DEFAULT FALSE");
+        }
     }
 
     @FunctionalInterface

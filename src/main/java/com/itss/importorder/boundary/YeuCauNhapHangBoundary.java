@@ -215,6 +215,7 @@ public class YeuCauNhapHangBoundary {
     }
 
     private void showRequestDialog(YeuCauNhapHang target) {
+        boolean isSales = nguoiDung.getVaiTro() == VaiTro.SALES;
         // --- Danh sách mặt hàng (observable để table tự cập nhật) ---
         ObservableList<ChiTietHangHoa> itemsList = FXCollections.observableArrayList();
         if (target != null) itemsList.addAll(target.getItems());
@@ -226,8 +227,11 @@ public class YeuCauNhapHangBoundary {
                 UiUtil.column("Mã hàng",     ChiTietHangHoa::getMerchandiseCode,              100),
                 UiUtil.column("Tên mặt hàng",ChiTietHangHoa::getMerchandiseName,              200),
                 UiUtil.column("Số lượng",    i -> String.valueOf(i.getQuantityOrdered()),       80),
-                UiUtil.column("Đơn vị",      ChiTietHangHoa::getUnit,                          80),
+                UiUtil.column("Đơn vị",      ChiTietHangHoa::getUnit,                          80));
+        if (!isSales) {
+            itemsTable.getColumns().add(
                 UiUtil.column("Giá (USD)",   i -> String.format("%.2f", i.getEstimatedPrice()), 90));
+        }
 
         Button removeBtn = UiUtil.dangerButton("Xóa mặt hàng đã chọn");
         removeBtn.setOnAction(e -> {
@@ -237,7 +241,6 @@ public class YeuCauNhapHangBoundary {
         });
 
         // --- Form nhập mặt hàng mới ---
-        boolean isSales = nguoiDung.getVaiTro() == VaiTro.SALES;
 
         TextField code       = new TextField();
         TextField name       = new TextField();

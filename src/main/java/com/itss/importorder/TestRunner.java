@@ -11,7 +11,6 @@ import com.itss.importorder.util.ValidationException;
 
 public class TestRunner {
     public static void main(String[] args) {
-        cleanDatabase();
         testPlanningSuccess();
         testPlanningFailsWhenStockIsMissing();
         testConfirmOrderUpdatesStock();
@@ -36,6 +35,7 @@ public class TestRunner {
     }
 
     private static void testPlanningSuccess() {
+        cleanDatabase();
         DataStore store = SampleDataFactory.create();
         PhuongAnController controller = new PhuongAnController(store);
         YeuCauNhapHang ycnh;
@@ -51,6 +51,7 @@ public class TestRunner {
     }
 
     private static void testPlanningFailsWhenStockIsMissing() {
+        cleanDatabase();
         DataStore store = SampleDataFactory.create();
         PhuongAnController controller = new PhuongAnController(store);
         YeuCauNhapHang ycnh;
@@ -73,6 +74,7 @@ public class TestRunner {
     }
 
     private static void testConfirmOrderUpdatesStock() {
+        cleanDatabase();
         DataStore store = SampleDataFactory.create();
         com.itss.importorder.controller.YeuCauNhapHangController ycnhController = new com.itss.importorder.controller.YeuCauNhapHangController(store);
         PhuongAnController paController = new PhuongAnController(store);
@@ -102,7 +104,9 @@ public class TestRunner {
 
             ycnhController.confirmOrderForSite(ycnh, "SJP01");
 
-            assertTrue(ycnh.getStatus() == com.itss.importorder.entity.TrangThaiYeuCau.ORDERED, "Order status should be ORDERED");
+            // Verify order status is still PLANNING since SKR02 hasn't confirmed
+            YeuCauNhapHang ycnhAfterSJP = store.findYeuCauNhapHangByCode("REQ-2026-001");
+            assertTrue(ycnhAfterSJP.getStatus() == com.itss.importorder.entity.TrangThaiYeuCau.PLANNING, "Order status should still be PLANNING");
 
             int updatedStockSJP = store.findTonKhosBySiteCode("SJP01").stream()
                     .filter(s -> s.getMerchandiseCode().equals("CPU-I7"))
@@ -117,6 +121,10 @@ public class TestRunner {
             assertTrue(initialStockSKR == 120, "Initial stock at SKR02 should be 120");
 
             ycnhController.confirmOrderForSite(ycnh, "SKR02");
+
+            // Verify order status is now ORDERED since all sites confirmed
+            YeuCauNhapHang ycnhAfterBoth = store.findYeuCauNhapHangByCode("REQ-2026-001");
+            assertTrue(ycnhAfterBoth.getStatus() == com.itss.importorder.entity.TrangThaiYeuCau.ORDERED, "Order status should be ORDERED");
 
             int updatedStockSKR = store.findTonKhosBySiteCode("SKR02").stream()
                     .filter(s -> s.getMerchandiseCode().equals("CPU-I7"))

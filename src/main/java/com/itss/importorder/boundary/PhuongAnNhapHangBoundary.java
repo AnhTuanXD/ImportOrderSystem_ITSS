@@ -5,10 +5,12 @@ import com.itss.importorder.controller.PhuongAnController;
 import com.itss.importorder.entity.ChiTietHangHoa;
 import com.itss.importorder.entity.PhanBo;
 import com.itss.importorder.entity.PhuongAnNhapHang;
+import com.itss.importorder.entity.TrangThaiYeuCau;
 import com.itss.importorder.entity.YeuCauNhapHang;
 import com.itss.importorder.util.UiUtil;
 import com.itss.importorder.util.ValidationException;
 import java.util.List;
+import java.util.stream.Collectors;
 import javafx.collections.FXCollections;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
@@ -93,7 +95,9 @@ public class PhuongAnNhapHangBoundary {
     }
 
     private void loadRequests() {
-        List<YeuCauNhapHang> requests = context.getYeuCauNhapHangController().findAll(null);
+        List<YeuCauNhapHang> requests = context.getYeuCauNhapHangController().findAll(null).stream()
+                .filter(r -> r.getStatus() == TrangThaiYeuCau.SENT)
+                .collect(Collectors.toList());
         requestBox.setItems(FXCollections.observableArrayList(requests));
         if (!requests.isEmpty()) {
             requestBox.getSelectionModel().selectFirst();

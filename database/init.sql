@@ -62,7 +62,8 @@ CREATE TABLE IF NOT EXISTS plan_allocations (
     merchandise_code VARCHAR(50) NOT NULL,
     quantity_ordered INTEGER NOT NULL,
     unit VARCHAR(50),
-    delivery_means VARCHAR(20) NOT NULL
+    delivery_means VARCHAR(20) NOT NULL,
+    confirmed BOOLEAN DEFAULT FALSE
 );
 
 -- Tạo bảng WarehouseReport

@@ -96,6 +96,10 @@ public class DataStore {
         phuongAnRepository.save(phuongAn);
     }
 
+    public void confirmAllocation(String planCode, String siteCode, String merchandiseCode) throws SQLException {
+        phuongAnRepository.confirmAllocation(planCode, siteCode, merchandiseCode);
+    }
+
     public void saveBaoCaoKho(BaoCaoKho baoCao) throws SQLException {
         baoCaoKhoRepository.save(baoCao);
     }

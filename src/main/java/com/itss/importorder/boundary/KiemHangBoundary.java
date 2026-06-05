@@ -41,12 +41,13 @@ public class KiemHangBoundary {
         title.getStyleClass().add("page-title");
 
         Button detail = new Button("Chi tiết đơn hàng");
+        Button reportDetail = new Button("Chi tiết báo cáo");
         Button check  = UiUtil.primaryButton("Kiểm tra hoàn tất");
         HBox toolbar;
         if (nguoiDung != null && nguoiDung.getVaiTro() == VaiTro.OVERSEAS_ORDER) {
-            toolbar = new HBox(10, detail);
+            toolbar = new HBox(10, detail, reportDetail);
         } else {
-            toolbar = new HBox(10, detail, check);
+            toolbar = new HBox(10, detail, reportDetail, check);
         }
         toolbar.getStyleClass().add("toolbar");
 
@@ -66,6 +67,7 @@ public class KiemHangBoundary {
         UiUtil.setupTable(reportTable);
 
         detail.setOnAction(event -> showOrderDetail());
+        reportDetail.setOnAction(event -> showReportDetail());
         check.setOnAction(event -> showCheckDialog());
 
         page.getChildren().addAll(title, toolbar,
@@ -95,6 +97,7 @@ public class KiemHangBoundary {
         TableView<ChiTietHangHoa> items = new TableView<>();
         items.getColumns().addAll(
                 UiUtil.column("Mã hàng",       ChiTietHangHoa::getMerchandiseCode,                  130),
+                UiUtil.column("Tên hàng",      ChiTietHangHoa::getMerchandiseName,                  180),
                 UiUtil.column("Số lượng",       i -> String.valueOf(i.getQuantityOrdered()),          100),
                 UiUtil.column("Đơn vị",         ChiTietHangHoa::getUnit,                             80),
                 UiUtil.column("Ngày mong muốn", i -> i.getDesiredDeliveryDate().toString(),           150));
@@ -105,6 +108,42 @@ public class KiemHangBoundary {
         dialog.setTitle("Chi tiết đơn hàng " + ycnh.getRequestCode());
         dialog.getDialogPane().setContent(items);
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dialog.getDialogPane().setPrefWidth(700);
+        dialog.showAndWait();
+    }
+
+    private void showReportDetail() {
+        BaoCaoKho bck = reportTable.getSelectionModel().getSelectedItem();
+        if (bck == null) {
+            UiUtil.error("Vui lòng chọn một báo cáo.");
+            return;
+        }
+
+        java.util.Optional<YeuCauNhapHang> ycnhOpt = context.getYeuCauNhapHangController().findByCode(bck.getRequestCode());
+        if (ycnhOpt.isEmpty()) {
+            UiUtil.error("Không tìm thấy thông tin đơn hàng của báo cáo này.");
+            return;
+        }
+        YeuCauNhapHang ycnh = ycnhOpt.get();
+
+        TableView<ChiTietHangHoa> items = new TableView<>();
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String formattedDate = bck.getCheckedAt().format(formatter);
+
+        items.getColumns().addAll(
+                UiUtil.column("Mã hàng",       ChiTietHangHoa::getMerchandiseCode,                  130),
+                UiUtil.column("Tên hàng",      ChiTietHangHoa::getMerchandiseName,                  180),
+                UiUtil.column("Số lượng",       i -> String.valueOf(i.getQuantityOrdered()),          100),
+                UiUtil.column("Đơn vị",         ChiTietHangHoa::getUnit,                             80),
+                UiUtil.column("Ngày nhận hàng", i -> formattedDate,                                  180));
+        UiUtil.setupTable(items);
+        items.setItems(FXCollections.observableArrayList(ycnh.getItems()));
+
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Chi tiết báo cáo kiểm hàng " + bck.getReportCode());
+        dialog.getDialogPane().setContent(items);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dialog.getDialogPane().setPrefWidth(700);
         dialog.showAndWait();
     }
 
