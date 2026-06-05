@@ -242,6 +242,8 @@ public class YeuCauNhapHangBoundary {
         });
 
         // --- Form nhập mặt hàng mới ---
+        Label formLabel = new Label("Nhập thông tin để thêm mặt hàng");
+        formLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 13;");
 
         TextField code       = new TextField();
         TextField name       = new TextField();
@@ -257,6 +259,44 @@ public class YeuCauNhapHangBoundary {
         notes.setPrefRowCount(2);
 
         Button addItemBtn = UiUtil.primaryButton("+ Thêm vào danh sách");
+        Button cancelEditBtn = new Button("Bỏ chọn / Thêm mới");
+        cancelEditBtn.setVisible(false);
+
+        // Selection listener to populate form for editing
+        itemsTable.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                code.setText(newVal.getMerchandiseCode());
+                name.setText(newVal.getMerchandiseName());
+                category.setText(newVal.getCategory() == null ? "" : newVal.getCategory());
+                quantity.setText(String.valueOf(newVal.getQuantityOrdered()));
+                unit.setText(newVal.getUnit() == null ? "" : newVal.getUnit());
+                requestDate.setValue(newVal.getRequestDate());
+                desiredDate.setValue(newVal.getDesiredDeliveryDate());
+                supplier.setText(newVal.getSupplier() == null ? "" : newVal.getSupplier());
+                price.setText(String.format(java.util.Locale.US, "%.2f", newVal.getEstimatedPrice()));
+                notes.setText(newVal.getNotes() == null ? "" : newVal.getNotes());
+                addItemBtn.setText("Cập nhật mặt hàng");
+                formLabel.setText("Chỉnh sửa thông tin mặt hàng");
+                cancelEditBtn.setVisible(true);
+            } else {
+                code.clear();
+                name.clear();
+                category.setText("Electronics");
+                quantity.setText("1");
+                unit.setText("PCS (Cái)");
+                requestDate.setValue(LocalDate.now());
+                desiredDate.setValue(LocalDate.now().plusDays(10));
+                supplier.setText("Nhà cung cấp mặc định");
+                price.setText("0.00");
+                notes.clear();
+                addItemBtn.setText("+ Thêm vào danh sách");
+                formLabel.setText("Nhập thông tin để thêm mặt hàng");
+                cancelEditBtn.setVisible(false);
+            }
+        });
+
+        cancelEditBtn.setOnAction(e -> itemsTable.getSelectionModel().clearSelection());
+
         addItemBtn.setOnAction(e -> {
             try {
                 if (code.getText().isBlank()) { UiUtil.error("Mã hàng không được để trống."); return; }
@@ -265,16 +305,28 @@ public class YeuCauNhapHangBoundary {
                 if (qty <= 0) { UiUtil.error("Số lượng phải lớn hơn 0."); return; }
                 if (unit.getText().isBlank()) { UiUtil.error("Đơn vị không được để trống."); return; }
                 double estimatedPrice = isSales ? 0.0 : Double.parseDouble(price.getText().trim());
-                itemsList.add(new ChiTietHangHoa(
+                
+                ChiTietHangHoa newItem = new ChiTietHangHoa(
                         code.getText().trim(), name.getText().trim(), category.getText().trim(),
                         qty, unit.getText().trim(),
                         0,
                         requestDate.getValue(), desiredDate.getValue(),
                         isSales ? "" : supplier.getText().trim(),
                         estimatedPrice,
-                        notes.getText().trim()));
-                code.clear(); name.clear(); quantity.setText("1"); notes.clear();
-                code.requestFocus();
+                        notes.getText().trim());
+
+                ChiTietHangHoa selectedItem = itemsTable.getSelectionModel().getSelectedItem();
+                if (selectedItem != null) {
+                    int idx = itemsList.indexOf(selectedItem);
+                    if (idx >= 0) {
+                        itemsList.set(idx, newItem);
+                    }
+                    itemsTable.getSelectionModel().clearSelection();
+                } else {
+                    itemsList.add(newItem);
+                    code.clear(); name.clear(); quantity.setText("1"); notes.clear();
+                    code.requestFocus();
+                }
             } catch (NumberFormatException ex) {
                 UiUtil.error("Số lượng hoặc Giá không đúng định dạng số.");
             }
@@ -300,7 +352,8 @@ public class YeuCauNhapHangBoundary {
                     createRow("Tên nhà cung cấp",    supplier),
                     createRow("Giá ước tính (USD)",  price)));
         }
-        itemForm.getChildren().addAll(noteSection, addItemBtn);
+        HBox buttonBox = new HBox(10, addItemBtn, cancelEditBtn);
+        itemForm.getChildren().addAll(noteSection, buttonBox);
 
         javafx.scene.control.ScrollPane formScroll = new javafx.scene.control.ScrollPane(itemForm);
         formScroll.setFitToWidth(true);
@@ -309,8 +362,6 @@ public class YeuCauNhapHangBoundary {
         // --- Layout tổng thể của dialog ---
         Label listLabel = new Label("Danh sách mặt hàng trong yêu cầu");
         listLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 13;");
-        Label formLabel = new Label("Nhập thông tin để thêm mặt hàng");
-        formLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 13;");
 
         VBox dialogContent = new VBox(10);
         dialogContent.setPadding(new Insets(12));
