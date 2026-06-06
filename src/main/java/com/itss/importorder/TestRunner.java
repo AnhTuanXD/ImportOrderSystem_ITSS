@@ -14,6 +14,10 @@ public class TestRunner {
         testPlanningSuccess();
         testPlanningFailsWhenStockIsMissing();
         testConfirmOrderUpdatesStock();
+        
+        // Chạy kiểm thử hộp trắng C1
+        WhiteBoxC1Test.runC1Tests();
+        
         System.out.println("All service tests passed.");
     }
 

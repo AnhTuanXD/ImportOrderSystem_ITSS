@@ -46,7 +46,22 @@ public class YeuCauNhapHangController {
 
     public YeuCauNhapHang create(String createdBy, List<ChiTietHangHoa> items) {
         validateItems(items);
-        String code = "REQ-2026-" + String.format("%03d", store.getYeuCauNhapHangs().size() + 1);
+        int maxNum = 0;
+        for (YeuCauNhapHang r : store.getYeuCauNhapHangs()) {
+            String requestCode = r.getRequestCode();
+            if (requestCode != null) {
+                int lastDash = requestCode.lastIndexOf('-');
+                if (lastDash >= 0 && lastDash < requestCode.length() - 1) {
+                    try {
+                        int num = Integer.parseInt(requestCode.substring(lastDash + 1));
+                        if (num > maxNum) {
+                            maxNum = num;
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+        }
+        String code = "REQ-2026-" + String.format("%03d", maxNum + 1);
         YeuCauNhapHang ycnh = new YeuCauNhapHang(code, createdBy, LocalDate.now(), TrangThaiYeuCau.SENT);
         ycnh.getItems().addAll(items);
         try {
